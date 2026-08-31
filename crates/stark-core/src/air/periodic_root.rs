@@ -43,6 +43,15 @@ pub(super) fn periodic_tree<A: AirExt>(
     let d = Domain::of(air, extra_blowup_bits);
     let cols = air.periodic_columns();
     let coeffs = periodic_coeffs(&cols, &d);
+    // An AIR with no periodic columns commits an empty tree, not a tree of
+    // hashed empty rows. The materialized committer takes its leaf count from
+    // the columns themselves, so with none there are no leaves; the streaming
+    // path has to reproduce that or the same AIR gets two roots depending on
+    // which committer ran, which is the drift this shared function exists to
+    // prevent.
+    if cols.is_empty() {
+        return (coeffs, MerkleTree::commit_wide_periodic(&[]));
+    }
     let mut digests = alloc::vec![[0u8; 32]; d.n];
     for c in 0..d.blowup {
         let per = extend(&coeffs, &d, c);
