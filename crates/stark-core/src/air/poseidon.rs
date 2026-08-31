@@ -128,6 +128,14 @@ impl Poseidon {
         self.rc[r]
     }
 
+    /// The diffusion matrix, exposed so an independent implementation of the
+    /// published derivation rule can check these parameters from outside
+    /// without reading this file. A parameter set nobody can audit externally
+    /// is a parameter set that has to be taken on trust.
+    pub fn mds(&self) -> &[[Fp; WIDTH]; WIDTH] {
+        &self.mds
+    }
+
     /// The full permutation: every round applied to a state. This is the
     /// primitive a Poseidon Merkle commitment compresses with, and because it is
     /// all field operations it can be arithmetized, which is what makes a

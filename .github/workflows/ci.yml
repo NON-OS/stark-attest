@@ -38,6 +38,10 @@ jobs:
         run: rustup show active-toolchain || rustup toolchain install stable
       - name: cryptographic measurements
         run: cargo run --release --bin soundness -- bench/soundness.json
+      - name: the parameters are the published rule
+        run: cargo run --release --bin regenerate-constants
+      - name: hash architecture study
+        run: cargo run --release --bin hash-study -- bench/hash-study.json
       - name: timing measurements
         run: |
           cp bench/results.json /tmp/baseline.json 2>/dev/null || true
