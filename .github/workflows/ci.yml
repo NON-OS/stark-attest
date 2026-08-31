@@ -25,6 +25,8 @@ jobs:
         run: cargo test -p nonos-stark --lib --features parallel
       - name: adversarial suite
         run: cargo test -p stark-attest --test attacks --release
+      - name: committer agreement
+        run: cargo test -p stark-attest --test committer --release
       - name: selftest
         run: ./target/release/stark-attest selftest
 
