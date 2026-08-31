@@ -15,11 +15,3 @@ criterion = "0.5"
 [[bench]]
 name = "attest"
 harness = false
-
-[[bin]]
-name = "emit-bench"
-path = "benches/emit.rs"
-
-[[bin]]
-name = "soundness"
-path = "benches/soundness.rs"

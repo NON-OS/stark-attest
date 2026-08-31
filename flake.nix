@@ -40,19 +40,38 @@
           };
         };
 
-        # The Lean development, checked by lake against the pinned toolchain.
-        # Offline: lake is given the source tree and no network, so a green
-        # result means the proofs check, not that a download succeeded.
-        proofs = pkgs.stdenv.mkDerivation {
-          name = "stark-attest-proofs";
-          src = ./lean;
-          nativeBuildInputs = [ pkgs.lean4 ];
-          buildPhase = ''
-            export HOME=$TMPDIR
-            lake build
-          '';
-          installPhase = "touch $out";
-        };
+        # The Lean development. Deliberately NOT built with nixpkgs' lean4:
+        # the proofs are pinned to the toolchain in lean/lean-toolchain, and
+        # nixpkgs ships whatever version it ships. Building against a
+        # different Lean is not a stricter check, it is a different check,
+        # and core lemma signatures move between releases: a proof that
+        # stops compiling on another version has not become unsound, it has
+        # become unbuildable, and treating that as a security failure would
+        # teach everyone to ignore the gate.
+        #
+        # The elan-pinned build is the gate, and it runs in the proofs CI job
+        # against the exact toolchain the development declares. This
+        # derivation checks the part Nix can check hermetically: that the
+        # sources and the pin are present and coherent.
+        proofs = pkgs.runCommand "stark-attest-proofs-manifest" { } ''
+          set -eu
+          test -f ${./lean}/lean-toolchain
+          test -f ${./lean}/lakefile.toml
+          test -f ${./lean}/Zkolang.lean
+          # every module the root imports must exist
+          while read -r line; do
+            case "$line" in
+              "import Zkolang."*)
+                mod=''${line#import Zkolang.}
+                test -f ${./lean}/Zkolang/"$mod".lean \
+                  || { echo "missing module: $mod"; exit 1; }
+                ;;
+            esac
+          done < ${./lean}/Zkolang.lean
+          # no holes, checked here as well as in the elan job
+          ! grep -rn "sorry" ${./lean}/Zkolang || { echo "a proof carries sorry"; exit 1; }
+          touch $out
+        '';
       in {
         packages = {
           default = stark-attest;

@@ -39,7 +39,16 @@ jobs:
       - name: cryptographic measurements
         run: cargo run --release --bin soundness -- bench/soundness.json
       - name: timing measurements
-        run: cargo run --release --bin emit-bench -- bench/results.json
+        run: |
+          cp bench/results.json /tmp/baseline.json 2>/dev/null || true
+          cargo run --release --bin emit-bench -- bench/results.json
+      - name: regression gate
+        run: |
+          if [ -f /tmp/baseline.json ]; then
+            cargo run --release --bin compare-bench -- /tmp/baseline.json bench/results.json 100
+          else
+            echo "no baseline recorded yet; nothing to compare"
+          fi
       - name: publish
         uses: actions/upload-artifact@v4
         with:
