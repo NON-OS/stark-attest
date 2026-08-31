@@ -1,0 +1,5 @@
+{"log":
+ [{"message":
+   ".> LEAN_PATH=././.lake/build/lib DYLD_LIBRARY_PATH= /Users/ek/.elan/toolchains/leanprover--lean4---v4.15.0/bin/lean ././././Zkolang/Math.lean -R ./././. -o ././.lake/build/lib/Zkolang/Math.olean -i ././.lake/build/lib/Zkolang/Math.ilean -c ././.lake/build/ir/Zkolang/Math.c --json",
+   "level": "trace"}],
+ "depHash": "9432716780152465238"}

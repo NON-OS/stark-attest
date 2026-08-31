@@ -30,6 +30,31 @@ jobs:
       - name: selftest
         run: ./target/release/stark-attest selftest
 
+  measure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: toolchain
+        run: rustup show active-toolchain || rustup toolchain install stable
+      - name: cryptographic measurements
+        run: cargo run --release --bin soundness -- bench/soundness.json
+      - name: timing measurements
+        run: cargo run --release --bin emit-bench -- bench/results.json
+      - name: publish
+        uses: actions/upload-artifact@v4
+        with:
+          name: measurements
+          path: bench/
+      - name: record on main
+        if: github.ref == 'refs/heads/main'
+        run: |
+          set -euo pipefail
+          git config user.name "eKisNonos"
+          git config user.email "ekisanon@proton.me"
+          git add bench/
+          git diff --cached --quiet || git commit -m "bench: record the measurements for $GITHUB_SHA"
+          git push || true
+
   proofs:
     runs-on: ubuntu-latest
     steps:
