@@ -1,0 +1,42 @@
+# Every push re-earns the README's claims: the build, the unit tests under
+# both prover forms, the adversarial suite (all rejections), and the CLI
+# selftest. Benchmarks run on demand, not per push; a shared runner's noise
+# would make their numbers lies.
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: toolchain
+        run: rustup show active-toolchain || rustup toolchain install stable
+      - name: format
+        run: cargo fmt --all -- --check
+      - name: build
+        run: cargo build --release --workspace
+      - name: unit tests, serial prover
+        run: cargo test -p nonos-stark --lib
+      - name: unit tests, parallel prover
+        run: cargo test -p nonos-stark --lib --features parallel
+      - name: adversarial suite
+        run: cargo test -p stark-attest --test attacks --release
+      - name: selftest
+        run: ./target/release/stark-attest selftest
+
+  proofs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: lean toolchain
+        run: |
+          curl -sSfL https://github.com/leanprover/elan/releases/latest/download/elan-x86_64-unknown-linux-gnu.tar.gz | tar xz
+          ./elan-init -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> $GITHUB_PATH
+      - name: machine-checked facts
+        working-directory: lean
+        run: lake build
