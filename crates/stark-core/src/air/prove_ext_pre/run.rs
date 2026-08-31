@@ -98,7 +98,13 @@ pub fn stark_prove_ext_preprocessed<A: AirExt>(
         &deep_tree,
     );
     StarkProofExtPre {
-        proof: StarkProofExt { trace_root, comp_root: comp_tree.root(), ood_frame: frame, fri, queries: qs },
+        proof: StarkProofExt {
+            trace_root,
+            comp_root: comp_tree.root(),
+            ood_frame: frame,
+            fri,
+            queries: qs,
+        },
         periodic_z,
         openings,
     }

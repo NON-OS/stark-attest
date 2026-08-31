@@ -15,8 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod air;
-mod spec;
 mod leg;
+mod spec;
 mod trace;
 
 pub use air::{ValueBalance, LIMB_SHIFT};

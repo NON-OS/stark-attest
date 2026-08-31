@@ -40,11 +40,5 @@ fn main() {
     let limbs: [Fp; NOTE_LIMBS] = core::array::from_fn(|i| Fp::from_u64(limbs_u[i]));
     let cm = p.commit_note(&limbs);
     println!("\nreference commit_note([1..=11]):");
-    println!(
-        "{}",
-        cm.iter()
-            .map(|c| c.value().to_string())
-            .collect::<Vec<_>>()
-            .join(",")
-    );
+    println!("{}", cm.iter().map(|c| c.value().to_string()).collect::<Vec<_>>().join(","));
 }

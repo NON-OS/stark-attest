@@ -37,10 +37,7 @@ impl ValueBalance {
     pub(super) fn transition_impl<F: Felt>(&self, window: &[F], periodic: &[F]) -> Vec<F> {
         let (acc, lo, hi, value) = (window[0], window[1], window[2], window[3]);
         let shift = F::from_base(Fp::from_u64(LIMB_SHIFT));
-        vec![
-            value - lo - hi * shift,
-            window[4] - acc - periodic[0] * value,
-        ]
+        vec![value - lo - hi * shift, window[4] - acc - periodic[0] * value]
     }
 
     pub(super) fn signs(&self) -> Vec<Fp> {

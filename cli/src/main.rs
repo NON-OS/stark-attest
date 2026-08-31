@@ -97,7 +97,8 @@ fn gate_verify(root_bytes: &[u8; 32], trailer: &[u8], context: &[u8]) -> bool {
         siblings.push(to_rate(&trailer[9 + i * 32..9 + i * 32 + 32]));
     }
     let dirs = &trailer[sib_end..sib_end + dir_bytes];
-    let directions: Vec<bool> = (0..TREE_DEPTH).map(|i| (dirs[i / 8] >> (i % 8)) & 1 == 1).collect();
+    let directions: Vec<bool> =
+        (0..TREE_DEPTH).map(|i| (dirs[i / 8] >> (i % 8)) & 1 == 1).collect();
     let Some(proof) = deserialize_proof_ext(&trailer[sib_end + dir_bytes..]) else {
         return false;
     };

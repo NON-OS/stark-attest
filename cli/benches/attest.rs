@@ -93,9 +93,7 @@ fn bench_attest(c: &mut Criterion) {
     }
     let hasher = Poseidon::new(LOG_ROUNDS, [Fp::ZERO; RATE]);
 
-    c.bench_function("commit/8x64KiB", |b| {
-        b.iter(|| MeasuredSet::commit(&hasher, &padded))
-    });
+    c.bench_function("commit/8x64KiB", |b| b.iter(|| MeasuredSet::commit(&hasher, &padded)));
 
     let set = MeasuredSet::commit(&hasher, &padded);
     let root = root_bytes(set.root());
@@ -108,14 +106,28 @@ fn bench_attest(c: &mut Criterion) {
     prove_group.bench_function("one-member", |b| {
         b.iter(|| {
             build_attestation_trailer_from_set(
-                &hasher, LOG_ROUNDS, &set, 0, &ctx, N_QUERIES, GRIND_BITS, EXTRA_BLOWUP_BITS,
+                &hasher,
+                LOG_ROUNDS,
+                &set,
+                0,
+                &ctx,
+                N_QUERIES,
+                GRIND_BITS,
+                EXTRA_BLOWUP_BITS,
             )
         })
     });
     prove_group.finish();
 
     let trailer = build_attestation_trailer_from_set(
-        &hasher, LOG_ROUNDS, &set, 0, &ctx, N_QUERIES, GRIND_BITS, EXTRA_BLOWUP_BITS,
+        &hasher,
+        LOG_ROUNDS,
+        &set,
+        0,
+        &ctx,
+        N_QUERIES,
+        GRIND_BITS,
+        EXTRA_BLOWUP_BITS,
     );
     assert!(verify(&root, &trailer, &ctx), "bench fixture must verify");
 

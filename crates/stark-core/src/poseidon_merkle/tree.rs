@@ -48,9 +48,8 @@ impl PoseidonMerkleTree {
             // prover spends: a column's tree over the evaluation domain is one
             // compression per node, and there is a tree for every column.
             let half = level.len() / 2;
-            let next = crate::par::map_index(half, |i| {
-                hasher.compress(&level[2 * i], &level[2 * i + 1])
-            });
+            let next =
+                crate::par::map_index(half, |i| hasher.compress(&level[2 * i], &level[2 * i + 1]));
             level = next;
             layers.push(level.clone());
         }

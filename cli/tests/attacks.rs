@@ -84,8 +84,13 @@ fn gate(root: &[u8; 32], trailer: &[u8], context: &[u8]) -> bool {
     let Some(proof) = deserialize_proof_ext(&trailer[sib_end + dir_bytes..]) else {
         return false;
     };
-    let air =
-        MerkleMembership::new(Poseidon::new(LOG_ROUNDS, [Fp::ZERO; RATE]), LOG_ROUNDS, to_rate(root), sib, d);
+    let air = MerkleMembership::new(
+        Poseidon::new(LOG_ROUNDS, [Fp::ZERO; RATE]),
+        LOG_ROUNDS,
+        to_rate(root),
+        sib,
+        d,
+    );
     stark_verify_ext_blown_bound(&air, &proof, N_QUERIES, GRIND_BITS, EXTRA_BLOWUP_BITS, context)
 }
 
@@ -98,8 +103,16 @@ fn honest() -> ([u8; 32], Vec<u8>, Vec<u8>) {
     let set = MeasuredSet::commit(&h, &padded(&imgs));
     let root = root_bytes(set.root());
     let context = ctx(a, &[0x19]);
-    let trailer =
-        build_attestation_trailer_from_set(&h, LOG_ROUNDS, &set, 0, &context, N_QUERIES, GRIND_BITS, EXTRA_BLOWUP_BITS);
+    let trailer = build_attestation_trailer_from_set(
+        &h,
+        LOG_ROUNDS,
+        &set,
+        0,
+        &context,
+        N_QUERIES,
+        GRIND_BITS,
+        EXTRA_BLOWUP_BITS,
+    );
     assert!(gate(&root, &trailer, &context), "honest baseline must verify");
     (root, trailer, context)
 }
@@ -141,7 +154,10 @@ fn non_member_has_no_trailer() {
 fn truncated_trailer_is_rejected() {
     let (root, trailer, context) = honest();
     for cut in [0usize, 7, 8, 9, trailer.len() / 2, trailer.len() - 1] {
-        assert!(!gate(&root, &trailer[..cut], &context), "a truncated trailer must not verify (cut {cut})");
+        assert!(
+            !gate(&root, &trailer[..cut], &context),
+            "a truncated trailer must not verify (cut {cut})"
+        );
     }
 }
 

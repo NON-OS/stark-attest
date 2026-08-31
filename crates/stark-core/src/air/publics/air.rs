@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::spec::{Air, AirExt};
 use super::super::super::field::{Fp, Fp2};
+use super::super::spec::{Air, AirExt};
 use alloc::vec;
 use alloc::vec::Vec;
 

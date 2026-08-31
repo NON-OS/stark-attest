@@ -116,15 +116,7 @@ impl WiredMultiExt {
         for region in &regions {
             region_transitions = region_transitions.max(region.num_transition());
         }
-        WiredMultiExt {
-            regions,
-            stack,
-            groups,
-            row_idx,
-            sig_base,
-            sel_idx,
-            region_transitions,
-        }
+        WiredMultiExt { regions, stack, groups, row_idx, sig_base, sel_idx, region_transitions }
     }
 
     fn stride(&self) -> usize {
