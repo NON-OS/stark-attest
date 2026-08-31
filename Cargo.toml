@@ -1,0 +1,3 @@
+[workspace]
+members = ["crates/stark-core", "cli"]
+resolver = "2"
