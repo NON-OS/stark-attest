@@ -102,16 +102,16 @@ fn main() {
 
         let iters = if size >= 1 << 20 { 3 } else { 20 };
         let p_ns = time(iters, || {
-            let _ = poseidon_absorb(&h, &data);
+            std::hint::black_box(poseidon_absorb(&h, &data));
         });
         let b_ns = time(iters * 10, || {
-            let _ = blake3::hash(&data);
+            std::hint::black_box(blake3::hash(&data));
         });
         // the hybrid pays BLAKE3 over the bytes plus one sponge over 32 bytes
         let digest = blake3::hash(&data);
         let hy_ns = time(iters * 5, || {
             let d = blake3::hash(&data);
-            let _ = poseidon_absorb(&h, d.as_bytes());
+            std::hint::black_box(poseidon_absorb(&h, d.as_bytes()));
         });
         let _ = digest;
 

@@ -219,7 +219,7 @@ fn main() {
             3,
             Some(("bytes_per_second".into(), total_bytes)),
             || {
-                let _ = MeasuredSet::commit(&hasher, &padded);
+                std::hint::black_box(MeasuredSet::commit(&hasher, &padded));
             },
         ));
     }
@@ -242,7 +242,7 @@ fn main() {
             3,
             Some(("bytes_per_second".into(), total_bytes)),
             || {
-                let _ = MeasuredSet::commit(&hasher, &padded);
+                std::hint::black_box(MeasuredSet::commit(&hasher, &padded));
             },
         ));
     }
@@ -265,7 +265,7 @@ fn main() {
             2,
             Some(("bytes_per_second".into(), total)),
             || {
-                let _ = MeasuredSet::commit(&hasher, &pad);
+                std::hint::black_box(MeasuredSet::commit(&hasher, &pad));
             },
         ));
         samples.push(measure(
@@ -275,7 +275,7 @@ fn main() {
             2,
             Some(("bytes_per_second".into(), total)),
             || {
-                let _ = MeasuredSet::commit_hybrid(&hasher, &pad);
+                std::hint::black_box(MeasuredSet::commit_hybrid(&hasher, &pad));
             },
         ));
     }
@@ -294,7 +294,7 @@ fn main() {
     ctx.extend_from_slice(&[0x19]);
 
     samples.push(measure("prove_member", "members=8", "ns/member", 3, None, || {
-        let _ = build_attestation_trailer_from_set(
+        std::hint::black_box(build_attestation_trailer_from_set(
             &hasher,
             LOG_ROUNDS,
             &set,
@@ -303,7 +303,7 @@ fn main() {
             N_QUERIES,
             GRIND_BITS,
             EXTRA_BLOWUP_BITS,
-        );
+        ));
     }));
 
     // Four members in sequence: the per-member cost when a whole set is
@@ -313,7 +313,7 @@ fn main() {
             let mut c = Vec::new();
             c.extend_from_slice(blake3::hash(&imgs[i]).as_bytes());
             c.extend_from_slice(&[0x19]);
-            let _ = build_attestation_trailer_from_set(
+            std::hint::black_box(build_attestation_trailer_from_set(
                 &hasher,
                 LOG_ROUNDS,
                 &set,
@@ -322,7 +322,7 @@ fn main() {
                 N_QUERIES,
                 GRIND_BITS,
                 EXTRA_BLOWUP_BITS,
-            );
+            ));
         }
     }));
 
@@ -346,7 +346,7 @@ fn main() {
         50,
         Some(("verifications_per_second".into(), 1.0)),
         || {
-            let _ = verify(&root, &trailer, &ctx);
+            std::hint::black_box(verify(&root, &trailer, &ctx));
         },
     ));
 
@@ -362,7 +362,7 @@ fn main() {
         20,
         Some(("rejections_per_second".into(), 1.0)),
         || {
-            let _ = verify(&root, &bad, &ctx);
+            std::hint::black_box(verify(&root, &bad, &ctx));
         },
     ));
 
