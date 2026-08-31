@@ -1,6 +1,6 @@
 // Lean compiler output
 // Module: Zkolang
-// Imports: Init Zkolang.Stream Zkolang.BatchInv Zkolang.Reduce
+// Imports: Init Zkolang.Stream Zkolang.BatchInv Zkolang.Reduce Zkolang.Trailer Zkolang.Padding Zkolang.Params
 #include <lean/lean.h>
 #if defined(__clang__)
 #pragma clang diagnostic ignored "-Wunused-parameter"
@@ -17,6 +17,9 @@ lean_object* initialize_Init(uint8_t builtin, lean_object*);
 lean_object* initialize_Zkolang_Stream(uint8_t builtin, lean_object*);
 lean_object* initialize_Zkolang_BatchInv(uint8_t builtin, lean_object*);
 lean_object* initialize_Zkolang_Reduce(uint8_t builtin, lean_object*);
+lean_object* initialize_Zkolang_Trailer(uint8_t builtin, lean_object*);
+lean_object* initialize_Zkolang_Padding(uint8_t builtin, lean_object*);
+lean_object* initialize_Zkolang_Params(uint8_t builtin, lean_object*);
 static bool _G_initialized = false;
 LEAN_EXPORT lean_object* initialize_Zkolang(uint8_t builtin, lean_object* w) {
 lean_object * res;
@@ -32,6 +35,15 @@ res = initialize_Zkolang_BatchInv(builtin, lean_io_mk_world());
 if (lean_io_result_is_error(res)) return res;
 lean_dec_ref(res);
 res = initialize_Zkolang_Reduce(builtin, lean_io_mk_world());
+if (lean_io_result_is_error(res)) return res;
+lean_dec_ref(res);
+res = initialize_Zkolang_Trailer(builtin, lean_io_mk_world());
+if (lean_io_result_is_error(res)) return res;
+lean_dec_ref(res);
+res = initialize_Zkolang_Padding(builtin, lean_io_mk_world());
+if (lean_io_result_is_error(res)) return res;
+lean_dec_ref(res);
+res = initialize_Zkolang_Params(builtin, lean_io_mk_world());
 if (lean_io_result_is_error(res)) return res;
 lean_dec_ref(res);
 return lean_io_result_mk_ok(lean_box(0));

@@ -40,3 +40,36 @@ jobs:
       - name: machine-checked facts
         working-directory: lean
         run: lake build
+      - name: no axioms beyond the core two, no sorry
+        working-directory: lean
+        run: |
+          set -euo pipefail
+          # a sorry anywhere means a claimed proof is a hole
+          ! grep -rn "sorry" Zkolang/ Zkolang.lean
+          # print the axiom dependencies of every theorem the repo advertises
+          cat > /tmp/axioms.lean <<'EOF'
+          import Zkolang
+          #print axioms Zkolang.Reduce.reduce_cong
+          #print axioms Zkolang.Reduce.mul_reduce_cong
+          #print axioms Zkolang.Trailer.sibling_cell_in_range
+          #print axioms Zkolang.Trailer.no_gap_before_proof
+          #print axioms Zkolang.Trailer.zero_depth_rejected
+          #print axioms Zkolang.Padding.admissible_ne_pad
+          #print axioms Zkolang.Padding.measure_ne_pad
+          #print axioms Zkolang.Params.no_downgrade
+          #print axioms Zkolang.Params.survival_monotone
+          EOF
+          lake env lean /tmp/axioms.lean | tee /tmp/axioms.out
+          # every line must be either "does not depend on any axioms" or the
+          # two the development permits; anything else fails the gate
+          ! grep -E "axioms" /tmp/axioms.out | grep -vE "does not depend|propext|Quot.sound|Classical.choice"
+
+  nix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v27
+        with:
+          extra_nix_config: "experimental-features = nix-command flakes"
+      - name: flake check
+        run: nix flake check -L

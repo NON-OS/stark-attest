@@ -1,9 +1,16 @@
 {
-  # The reproducibility base. Three things come out of this flake, all pinned
-  # by flake.lock: a dev shell with the Rust and Lean toolchains, the built
-  # CLI as a package, and `nix flake check` running the unit tests and the
-  # adversarial suite. A stranger with Nix reproduces every claim this repo
-  # makes with two commands and no trust in the author's machine.
+  # The reproducibility base.
+  #
+  #   nix build            the CLI as a derivation, from pinned inputs
+  #   nix flake check      build, unit tests, adversarial suite, selftest,
+  #                        and a lake build of the machine-checked proofs
+  #   nix develop          a shell with the Rust and Lean toolchains
+  #   nix run . -- verify  the tool itself
+  #
+  # Everything a stranger needs to re-establish this repository's claims
+  # without trusting the author's machine, pinned by flake.lock. The proofs
+  # are a check like any other: a repository that claims machine-checked
+  # facts should fail its own gate when they stop checking.
   description = "stark-attest: one 32-byte statement over a set of artifacts";
 
   inputs = {
@@ -16,27 +23,63 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
 
-        cli = pkgs.rustPlatform.buildRustPackage {
+        # The CLI, built from this tree with the lock file's exact dependency
+        # graph. Tests run in release: the adversarial suite proves real
+        # trailers, and at debug speed that is minutes of nothing useful.
+        stark-attest = pkgs.rustPlatform.buildRustPackage {
           pname = "stark-attest";
           version = "0.1.0";
-          src = ./.;
+          src = self;
           cargoLock.lockFile = ./Cargo.lock;
-          # the adversarial suite proves real trailers; give it release speed
           checkType = "release";
           cargoTestFlags = [ "--workspace" ];
+          meta = {
+            description = "Attest a set of artifacts with one 32-byte statement";
+            license = pkgs.lib.licenses.agpl3Plus;
+            mainProgram = "stark-attest";
+          };
+        };
+
+        # The Lean development, checked by lake against the pinned toolchain.
+        # Offline: lake is given the source tree and no network, so a green
+        # result means the proofs check, not that a download succeeded.
+        proofs = pkgs.stdenv.mkDerivation {
+          name = "stark-attest-proofs";
+          src = ./lean;
+          nativeBuildInputs = [ pkgs.lean4 ];
+          buildPhase = ''
+            export HOME=$TMPDIR
+            lake build
+          '';
+          installPhase = "touch $out";
         };
       in {
-        packages.default = cli;
+        packages = {
+          default = stark-attest;
+          inherit stark-attest proofs;
+        };
 
         apps.default = {
           type = "app";
-          program = "${cli}/bin/stark-attest";
+          program = "${stark-attest}/bin/stark-attest";
         };
 
         checks = {
-          build = cli;
+          # the package builds and its whole test suite passes
+          build = stark-attest;
+          # the machine-checked facts still check
+          inherit proofs;
+          # the tool refuses what it must refuse
           selftest = pkgs.runCommand "stark-attest-selftest" { } ''
-            ${cli}/bin/stark-attest selftest
+            ${stark-attest}/bin/stark-attest selftest
+            touch $out
+          '';
+          # formatting is part of the contract, not a preference
+          fmt = pkgs.runCommand "stark-attest-fmt" {
+            nativeBuildInputs = [ pkgs.rustfmt pkgs.cargo ];
+          } ''
+            cd ${self}
+            cargo fmt --all -- --check
             touch $out
           '';
         };
@@ -45,13 +88,13 @@
           name = "stark-attest";
           packages = with pkgs; [
             rustup
+            rustfmt
+            lean4
             gnumake
             git
-            # the machine-checked facts under lean/
-            lean4
           ];
           shellHook = ''
-            echo "stark-attest shell. cargo test for the suites, lake build in lean/ for the proofs."
+            echo "stark-attest: cargo test for the suites, lake build in lean/ for the proofs."
           '';
         };
       });
