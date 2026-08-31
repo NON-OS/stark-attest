@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verify the NONOS kernel's proof in your browser</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: #0b0e11; color: #c9d1d9;
+    font: 15px/1.6 "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    max-width: 72ch; margin: 0 auto; padding: 3rem 1.25rem 5rem;
+  }
+  h1 { font-size: 1.25rem; color: #e6edf3; margin-bottom: .4rem; font-weight: 600; }
+  .sub { color: #8b949e; margin-bottom: 2.2rem; }
+  .row { margin: .35rem 0; word-break: break-all; }
+  .k { color: #8b949e; }
+  .v { color: #e6edf3; }
+  .box { border: 1px solid #21262d; border-radius: 8px; padding: 1.1rem 1.25rem; margin: 1.4rem 0; }
+  button {
+    font: inherit; cursor: pointer; border-radius: 6px; padding: .55rem 1.3rem;
+    border: 1px solid #2ea04366; background: #1a2620; color: #3fb950; margin-right: .7rem;
+  }
+  button.danger { border-color: #f8514966; background: #2a1a1a; color: #f85149; }
+  button:disabled { opacity: .45; cursor: default; }
+  #verdict { font-size: 1.35rem; font-weight: 700; margin: 1rem 0 .3rem; min-height: 2rem; }
+  .ok { color: #3fb950; } .bad { color: #f85149; } .dim { color: #8b949e; }
+  .note { color: #8b949e; font-size: .85rem; margin-top: 2.2rem; border-top: 1px solid #21262d; padding-top: 1.2rem; }
+  a { color: #58a6ff; text-decoration: none; }
+</style>
+</head>
+<body>
+<h1>Verify the NONOS kernel's proof. Here. Now.</h1>
+<p class="sub">This page runs the operating system's own attestation gate,
+compiled to WebAssembly, against the shipping kernel's STARK trailer.
+Transparent, post-quantum, no trusted setup. Nothing is sent anywhere:
+the proof verifies in your tab.</p>
+
+<div class="box">
+  <div class="row"><span class="k">statement&nbsp;&nbsp;</span><span class="v">the kernel is an enrolled member of the policy set committed by this root</span></div>
+  <div class="row"><span class="k">root&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="v" id="root">loading…</span></div>
+  <div class="row"><span class="k">kernel b3&nbsp;</span><span class="v" id="kb3">loading…</span></div>
+  <div class="row"><span class="k">trailer&nbsp;&nbsp;&nbsp;</span><span class="v" id="tlen">loading…</span></div>
+  <div class="row"><span class="k">verifier&nbsp;&nbsp;</span><span class="v" id="wsize">loading…</span></div>
+</div>
+
+<button id="go" disabled>verify the proof</button>
+<button id="tamper" class="danger" disabled>flip one bit, verify again</button>
+
+<div id="verdict" class="dim"></div>
+<div id="timing" class="dim"></div>
+
+<p class="note">
+The wasm is the deployment's gate, not a demo: the same
+<code>verify_attestation_trailer</code> the kernel runs at every process spawn
+and the bootloader runs before the jump, built from
+<a href="https://github.com/NON-OS/stark-attest">NON-OS/stark-attest</a> with
+<code>cargo build --target wasm32-unknown-unknown -p stark-attest-verifier-wasm</code>.
+The trailer binds the kernel's BLAKE3 measurement and the caller context into
+the STARK transcript; the root is the 32-byte statement the boot chain
+enforces. Flip any bit of the proof and the gate refuses it, which you can do
+yourself with the red button. To check the kernel hash against a release,
+download the image and run <code>b3sum</code>.
+</p>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const hex = b => [...b].map(x => x.toString(16).padStart(2, "0")).join("");
+
+let wasm, mem, fixture = {};
+
+async function fetchBytes(path) {
+  const r = await fetch(path);
+  if (!r.ok) throw new Error(path + ": " + r.status);
+  return new Uint8Array(await r.arrayBuffer());
+}
+
+function push(bytes) {
+  const ptr = wasm.wasm_alloc(bytes.length);
+  new Uint8Array(mem.buffer, ptr, bytes.length).set(bytes);
+  return ptr;
+}
+
+function runGate(trailer) {
+  const root = push(fixture.root), t = push(trailer), c = push(fixture.ctx);
+  const t0 = performance.now();
+  const ok = wasm.verify(root, t, trailer.length, c, fixture.ctx.length);
+  const ms = performance.now() - t0;
+  wasm.wasm_free(root, fixture.root.length);
+  wasm.wasm_free(t, trailer.length);
+  wasm.wasm_free(c, fixture.ctx.length);
+  return { ok: ok === 1, ms };
+}
+
+function show(res, label) {
+  $("verdict").className = res.ok ? "ok" : "bad";
+  $("verdict").textContent = res.ok ? "PROOF VERIFIED" : "REFUSED";
+  $("timing").textContent = label + " in " + res.ms.toFixed(1) + " ms, in this tab, by the kernel's own gate";
+}
+
+(async () => {
+  try {
+    const [wasmBytes, root, trailer, ctx] = await Promise.all([
+      fetchBytes("verifier.wasm"), fetchBytes("root.bin"),
+      fetchBytes("trailer.bin"), fetchBytes("context.bin"),
+    ]);
+    const { instance } = await WebAssembly.instantiate(wasmBytes, {});
+    wasm = instance.exports; mem = wasm.memory;
+    fixture = { root, trailer, ctx };
+    $("root").textContent = hex(root);
+    $("kb3").textContent = hex(ctx.slice(0, 32));
+    $("tlen").textContent = trailer.length.toLocaleString() + " bytes (path + STARK proof)";
+    $("wsize").textContent = wasmBytes.length.toLocaleString() + " bytes of WebAssembly";
+    $("go").disabled = $("tamper").disabled = false;
+  } catch (e) {
+    $("verdict").className = "bad";
+    $("verdict").textContent = "fixture failed to load: " + e.message;
+  }
+})();
+
+$("go").onclick = () => show(runGate(fixture.trailer), "verified");
+$("tamper").onclick = () => {
+  const t = fixture.trailer.slice();
+  t[t.length - 1] ^= 1;
+  show(runGate(t), "one bit flipped, refused");
+};
+</script>
+</body>
+</html>

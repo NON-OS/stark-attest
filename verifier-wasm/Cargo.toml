@@ -1,0 +1,19 @@
+[package]
+name = "stark-attest-verifier-wasm"
+version = "0.1.0"
+edition = "2021"
+license = "AGPL-3.0-or-later"
+description = "The attestation gate compiled for the browser: verify a NONOS STARK trailer in a tab"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+nonos-stark = { path = "../crates/stark-core" }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

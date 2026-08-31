@@ -63,11 +63,18 @@ three things at once: membership under the root, the artifact's exact bytes
 offset  size                 field
 0       8                    magic "NZKSTRK1"
 8       1                    depth (tree depth; 0 is invalid)
-9       ceil(depth/8)        direction bits, LSB-first per level
-+       depth * RATE * 8     sibling digests, RATE=4 field elements each,
+9       depth * RATE * 8     sibling digests, RATE=4 field elements each,
                              u64 little-endian, each < p (canonical)
++       ceil(depth/8)        direction bits, LSB-first per level
 +       rest                 the serialized STARK proof
 ```
+
+This table once documented the two variable regions in the swapped order,
+copied from a canonical verifier that disagreed with the builder beside it and
+with every deployed consumer. The wire format above is the one the builder
+emits, the kernel's spawn gate parses, and the round-trip test in the crate
+now pins; the browser verifier runs this same entry point, which is how the
+disagreement was finally caught.
 
 The parse (`verify_attestation_trailer`) is strict and total: magic checked,
 depth bounds checked, every sibling element rejected unless canonical
