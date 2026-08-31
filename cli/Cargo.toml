@@ -1,0 +1,17 @@
+[package]
+name = "stark-attest"
+version = "0.1.0"
+edition = "2021"
+license = "AGPL-3.0-or-later"
+description = "Attest a set of artifacts with one 32-byte statement, transparently and post-quantum"
+
+[dependencies]
+nonos-stark = { path = "../crates/stark-core" }
+blake3 = "1"
+
+[dev-dependencies]
+criterion = "0.5"
+
+[[bench]]
+name = "attest"
+harness = false
