@@ -27,6 +27,26 @@ by machine. Lean 4, core library only, no axioms beyond `propext` and
   identity; the theorem covers all 2^128 inputs, so the sampling is a
   backstop, not the guarantee.
 
+Five further modules are imported verbatim from the transfers lineage, with
+their provenance intact, because they prove facts about machinery this crate
+also runs: **`Hash.lean`** (the MiMC S-box exponent is coprime to the group
+order, so the permutation the hash iterates is a bijection),
+**`Opening.lean`** (the opening boundary of the batched membership AIR pins
+each opening's first state from the committed columns), **`Wiring.lean`**
+(the single-permutation wiring argument enforces exactly the binding classes
+it claims), **`Poly.lean`** (the Horner gadgets equal their expanded
+polynomials), and **`Math.lean`** (the repeated-squaring powers equal plain
+products).
+
+One correction is recorded here rather than hidden. `Trailer.lean` originally
+modelled the canonical verifier's parse, and proved it total, faithfully, for
+a layout that turned out to disagree with the builder beside it and with
+every deployed consumer. The totality theorems were true of the model and the
+model was wrong about the wire. The module is restated over the deployed
+layout and a round-trip test in the crate now ties the model to the bytes;
+the lesson, that a proof binds a model and only a test binds the model to the
+code, is stated in the module's own docstring.
+
 The module names carry the `Zkolang` namespace because the files are imported
 verbatim from the proof corpus they were written in; renaming modules would
 re-open proofs that are closed, for cosmetics. Provenance over polish.

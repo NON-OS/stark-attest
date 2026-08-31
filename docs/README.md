@@ -31,6 +31,15 @@ what is inherited, and what is not proven.
 8. **[security.md](security.md)** - every claim with its honest status:
    INHERITED, TESTED, DESIGNED, or NOT PROVEN.
 
+## Also in this directory
+
+- [poseidon-spec.md](poseidon-spec.md): the in-circuit hash, fully derivable
+  from the page, with the independent regeneration check CI runs.
+- [methodology.md](methodology.md): how every published number is produced,
+  and the audit that caught our own benchmark.
+- [verifier.md](verifier.md): the gate compiled to WebAssembly and the
+  browser page that runs it.
+
 ## The one-paragraph mental model
 
 An artifact set is padded to a fixed-width Merkle tree of the in-circuit

@@ -29,9 +29,11 @@ a minute in the sponge before any proving starts.
 
 **Hybrid** (`measure_capsule_hybrid`, `MeasuredSet::commit_hybrid`) hashes the
 artifact with BLAKE3 and absorbs only the resulting 32 bytes, one permutation
-regardless of size. It reaches BLAKE3's own throughput, three and a half
-gigabytes a second, which is over a thousand times the direct path at a
-megabyte and grows with artifact size.
+regardless of size. It reaches BLAKE3's own throughput, gigabytes a second,
+three orders of magnitude past the direct path, and the gap grows with
+artifact size. The current measured figures, with raw samples and the host
+that produced them, are in `bench/results.json` and `bench/hash-study.json`
+rather than hardcoded here, so this page cannot quietly outlive them.
 
 The security difference, stated plainly: the hybrid binds a BLAKE3 digest where
 the direct path binds the bytes, so a BLAKE3 collision would let two artifacts
