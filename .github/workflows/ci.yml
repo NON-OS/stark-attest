@@ -49,7 +49,10 @@ jobs:
       - name: timing measurements
         run: |
           cp bench/results.json /tmp/baseline.json 2>/dev/null || true
-          cargo run --release --bin emit-bench -- bench/results.json
+          git stash --include-untracked --quiet || true
+          cargo run --release --bin emit-bench -- /tmp/fresh-results.json
+          git stash pop --quiet 2>/dev/null || true
+          mv /tmp/fresh-results.json bench/results.json
       - name: regression gate
         run: |
           if [ -f /tmp/baseline.json ]; then
