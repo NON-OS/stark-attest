@@ -22,7 +22,7 @@
 
 use super::super::field::Fp;
 use super::super::poseidon_merkle::PoseidonMerkleTree;
-use super::measure::measure_capsule;
+use super::measure::{measure_capsule, measure_capsule_hybrid};
 use super::poseidon::{Poseidon, RATE};
 use super::prove_ext::stark_prove_ext_blown_bound;
 use super::serialize_ext::serialize_proof_ext;
@@ -41,9 +41,29 @@ pub struct MeasuredSet {
 }
 
 impl MeasuredSet {
-    /// Measure every image and commit them under one tree.
+    /// Measure every image and commit them under one tree, binding the bytes
+    /// directly. Correct, and slow by construction: the sponge absorbs seven
+    /// bytes per lane, so a large set spends most of its enrolment here. See
+    /// [`MeasuredSet::commit_hybrid`] for the path a real release should take.
     pub fn commit(hasher: &Poseidon, images: &[&[u8]]) -> MeasuredSet {
         let leaves: Vec<[Fp; RATE]> = images.iter().map(|i| measure_capsule(hasher, i)).collect();
+        let tree = PoseidonMerkleTree::commit(hasher, &leaves);
+        MeasuredSet { leaves, tree }
+    }
+
+    /// Measure every image through BLAKE3 and commit the digests under one
+    /// tree. Three orders of magnitude faster than [`MeasuredSet::commit`] on
+    /// artifacts of any real size, and resting on BLAKE3 collision resistance,
+    /// which an attestation context that already carries a BLAKE3 measurement
+    /// assumes anyway.
+    ///
+    /// The two schemes are domain separated, so a root built here is a
+    /// different root and a trailer from one never verifies against the other.
+    /// That is deliberate: changing how a set is measured must invalidate the
+    /// set, not silently reinterpret it.
+    pub fn commit_hybrid(hasher: &Poseidon, images: &[&[u8]]) -> MeasuredSet {
+        let leaves: Vec<[Fp; RATE]> =
+            images.iter().map(|i| measure_capsule_hybrid(hasher, i)).collect();
         let tree = PoseidonMerkleTree::commit(hasher, &leaves);
         MeasuredSet { leaves, tree }
     }

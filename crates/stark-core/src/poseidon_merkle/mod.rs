@@ -23,10 +23,12 @@
 
 mod pack_base;
 mod pack_ext;
+mod pruned;
 mod tree;
 mod verify;
 
 pub use pack_base::pack_base;
 pub use pack_ext::pack_ext;
+pub use pruned::PrunedPoseidonTree;
 pub use tree::PoseidonMerkleTree;
 pub use verify::verify_path;

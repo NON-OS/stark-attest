@@ -15,6 +15,39 @@ to the fixed width `2^depth` with a reserved slot value that begins with a
 byte no real artifact starts with, so no artifact can measure into a padding
 leaf. The root is the 32-byte statement.
 
+## How a member is measured, and the choice that costs a thousandfold
+
+A leaf is the Poseidon digest of a member. There are two ways to reach it, and
+the crate offers both because they bind different things:
+
+**Direct** (`measure_capsule`, `MeasuredSet::commit`) absorbs the artifact's
+bytes into the sponge, seven per lane with a permutation every rate group, so
+one permutation per 28 bytes. The proof binds the bytes themselves. Measured on
+this crate's own study, that runs at about three megabytes a second, and the
+rate is flat in artifact size: a hundred megabyte release spends more than half
+a minute in the sponge before any proving starts.
+
+**Hybrid** (`measure_capsule_hybrid`, `MeasuredSet::commit_hybrid`) hashes the
+artifact with BLAKE3 and absorbs only the resulting 32 bytes, one permutation
+regardless of size. It reaches BLAKE3's own throughput, three and a half
+gigabytes a second, which is over a thousand times the direct path at a
+megabyte and grows with artifact size.
+
+The security difference, stated plainly: the hybrid binds a BLAKE3 digest where
+the direct path binds the bytes, so a BLAKE3 collision would let two artifacts
+share a leaf. Whether that is a new assumption depends on the caller. For an
+attestation whose proof context already carries the artifact's BLAKE3
+measurement, as this crate's does, a BLAKE3 collision already breaks binding
+regardless of how the leaf was built, so the hybrid removes redundant work
+rather than adding a hypothesis. A caller whose context commits to no
+general-purpose digest is making a real trade and should keep the direct path.
+
+The two are domain separated: the hybrid absorbs a fixed domain word before the
+digest, so no artifact measures to the same leaf under both schemes, the roots
+differ, and a trailer from one never verifies against the other. That is
+deliberate. Changing how a set is measured has to invalidate the set rather
+than silently reinterpret it.
+
 A trailer for member `i` proves: *I know the authentication path from leaf `i`
 to this root, and the proof is bound to this context.* The context is
 `BLAKE3(artifact) || caller bytes` (in the OS deployment the caller bytes are

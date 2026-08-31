@@ -1,8 +1,0 @@
-{"log":
- [{"message":
-   ".> LEAN_PATH=././.lake/build/lib DYLD_LIBRARY_PATH= /Users/ek/.elan/toolchains/leanprover--lean4---v4.15.0/bin/lean ././././Zkolang/Padding.lean -R ./././. -o ././.lake/build/lib/Zkolang/Padding.olean -i ././.lake/build/lib/Zkolang/Padding.ilean -c ././.lake/build/ir/Zkolang/Padding.c --json",
-   "level": "trace"},
-  {"message":
-   "././././Zkolang/Padding.lean:83:42: unused variable `hi`\nnote: this linter can be disabled with `set_option linter.unusedVariables false`",
-   "level": "warning"}],
- "depHash": "962032088217673838"}

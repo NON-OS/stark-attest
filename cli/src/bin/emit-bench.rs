@@ -247,6 +247,39 @@ fn main() {
         ));
     }
 
+    // ---- the enrolment a real release pays, both ways -----------------------
+    // The number that decides whether attestation is practical: measuring a
+    // release-sized set of artifacts, direct against hybrid.
+    for &(count, size) in &[(16usize, 1048576usize), (64, 1048576)] {
+        let imgs = artifacts(count, size);
+        let refs: Vec<&[u8]> = imgs.iter().map(Vec::as_slice).collect();
+        let mut pad = refs.clone();
+        while pad.len() < LEAVES {
+            pad.push(PAD);
+        }
+        let total = (count * size) as f64;
+        samples.push(measure(
+            "enrol_direct",
+            &format!("members={count}, {}MiB each", size >> 20),
+            "ns/set",
+            2,
+            Some(("bytes_per_second".into(), total)),
+            || {
+                let _ = MeasuredSet::commit(&hasher, &pad);
+            },
+        ));
+        samples.push(measure(
+            "enrol_hybrid",
+            &format!("members={count}, {}MiB each", size >> 20),
+            "ns/set",
+            2,
+            Some(("bytes_per_second".into(), total)),
+            || {
+                let _ = MeasuredSet::commit_hybrid(&hasher, &pad);
+            },
+        ));
+    }
+
     // ---- proving, and its amortisation over a set ---------------------------
     let imgs = artifacts(8, 65536);
     let refs: Vec<&[u8]> = imgs.iter().map(Vec::as_slice).collect();

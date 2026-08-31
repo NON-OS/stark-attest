@@ -29,6 +29,7 @@ use super::spec::{Air, AirExt};
 use alloc::vec::Vec;
 
 /// One opening: a public leaf digest, its committed root, and the sibling path.
+#[derive(Clone)]
 pub struct Opening {
     pub leaf: [Fp; RATE],
     pub root: [Fp; RATE],
@@ -36,6 +37,7 @@ pub struct Opening {
     pub directions: Vec<bool>,
 }
 
+#[derive(Clone)]
 pub struct MultiMembership {
     hasher: Poseidon,
     log_rounds: u32,
@@ -102,10 +104,11 @@ impl MultiMembership {
         1usize << self.log_rounds
     }
 
-    /// Slots per opening: a compression per level plus the root checkpoint,
-    /// rounded to a power of two.
-    fn log_slots(&self) -> u32 {
-        (self.depth + 1).next_power_of_two().trailing_zeros()
+    /// Slots per opening: a compression per level plus the root checkpoint.
+    /// Unpadded. This region is most of the assembly's rows, and rounding here
+    /// charged 32 slots for 19 at the depth the pool runs.
+    fn slots(&self) -> usize {
+        self.depth + 1
     }
 
     /// Openings padded to a power of two.
@@ -115,7 +118,13 @@ impl MultiMembership {
 
     /// Rows per opening.
     fn span(&self) -> usize {
-        (1usize << self.log_slots()) * self.rounds()
+        self.slots() * self.rounds()
+    }
+
+    /// Rows of real work. Padding now sits after them rather than inside every
+    /// opening, so a stack can place these and leave the rest.
+    fn work_rows(&self) -> usize {
+        (1usize << self.log_batch()) * self.span()
     }
 
     fn initial_state(&self, opening: &Opening) -> [Fp; WIDTH] {
@@ -209,6 +218,12 @@ fn inject(node: [Fp; RATE], sibling: [Fp; RATE], right: bool) -> [Fp; WIDTH] {
 }
 
 impl MultiMembership {
+    /// The transition over any field, for a recursive verifier that recomputes
+    /// this region's constraints inside its own circuit.
+    pub fn transition_gen<F: Felt>(&self, window: &[F], periodic: &[F]) -> Vec<F> {
+        self.transition_impl(window, periodic)
+    }
+
     fn transition_impl<F: Felt>(&self, window: &[F], periodic: &[F]) -> Vec<F> {
         let stride = self.trace_width();
         let mut state = [F::ZERO; WIDTH];
@@ -217,16 +232,18 @@ impl MultiMembership {
         rc.copy_from_slice(&periodic[..WIDTH]);
         let slot_bnd = periodic[WIDTH];
         let op_bnd = periodic[WIDTH + 1];
-        // The direction and sibling ride the periodic columns in the per-proof form
-        // and the trace in the production form; the reset column stays periodic
-        // (structurally zero for a single opening).
+        // Direction and sibling ride the periodic columns in the per-proof form and
+        // the trace in the production form. Only the per-proof form carries the next
+        // opening's initial state as a periodic reset: that state is built from the
+        // opening's own leaf and sibling, so in the production form it would put
+        // witness into the columns a verifier key binds, and two transfers would
+        // need two keys.
         let mut sib = [F::ZERO; RATE];
         let mut reset = [F::ZERO; WIDTH];
         let dir;
         if self.witness_path {
             dir = window[WIDTH];
             sib.copy_from_slice(&window[WIDTH + 1..WIDTH + 1 + RATE]);
-            reset.copy_from_slice(&periodic[WIDTH + 2..WIDTH + 2 + WIDTH]);
         } else {
             dir = periodic[WIDTH + 2];
             sib.copy_from_slice(&periodic[WIDTH + 3..WIDTH + 3 + RATE]);
@@ -243,14 +260,20 @@ impl MultiMembership {
             } else {
                 (one - dir) * sib[j - RATE] + dir * pr[j - RATE]
             };
-            let expected =
-                op_bnd * reset[j] + slot_bnd * slot_inject + (one - op_bnd - slot_bnd) * pr[j];
+            // At an opening boundary the production form leaves the next state to
+            // the witness. It is not free: the caller binds the opened leaf to what
+            // the opening authenticates and the walked root to the committed root,
+            // so a chosen initial state has to be a real path to a bound leaf.
+            let carry = if self.witness_path { op_bnd * *next } else { op_bnd * reset[j] };
+            let expected = carry + slot_bnd * slot_inject + (one - op_bnd - slot_bnd) * pr[j];
             out.push(*next - expected);
         }
         // The witnessed direction must be a bit, so it cannot blend the two children.
         if self.witness_path {
             out.push(dir * (one - dir));
         }
+        // One root for the whole batch, enforced where each opening's path has
+        // folded to it, instead of a boundary set per opening.
         if self.shared_root {
             out.extend(shared_root::constraints(window, periodic));
         }
@@ -266,7 +289,11 @@ impl AirExt for MultiMembership {
 
 impl Air for MultiMembership {
     fn log_trace_len(&self) -> u32 {
-        self.log_batch() + self.log_slots() + self.log_rounds
+        self.work_rows().next_power_of_two().trailing_zeros()
+    }
+
+    fn rows(&self) -> usize {
+        self.work_rows()
     }
 
     fn trace_width(&self) -> usize {
@@ -303,9 +330,13 @@ impl Air for MultiMembership {
         let count = self.openings.len();
 
         // Per-proof: rc[WIDTH], slot_bnd, op_bnd, dir, sib[RATE], reset[WIDTH].
-        // Production: rc[WIDTH], slot_bnd, op_bnd, reset[WIDTH] (dir and sib are trace).
+        // Production: rc[WIDTH], slot_bnd, op_bnd. Dir and sib are trace, and the
+        // reset is gone: it held the next opening's leaf and sibling, which is
+        // witness, and witness in these columns moves the verifier key per proof.
+        // Shared root: the per-proof columns plus the checkpoint selector and the
+        // selector times the root.
         let cols_len = if self.witness_path {
-            WIDTH + 2 + WIDTH
+            WIDTH + 2
         } else if self.shared_root {
             shared_root::COLS
         } else {
@@ -331,19 +362,14 @@ impl Air for MultiMembership {
             cols[WIDTH].push(if is_slot_boundary && !is_op_boundary { Fp::ONE } else { Fp::ZERO });
             cols[WIDTH + 1].push(if is_op_boundary { Fp::ONE } else { Fp::ZERO });
 
-            // Reset state to the next opening's initial, at an opening boundary
-            // (structurally zero for a single opening).
-            let reset = if is_op_boundary && opening + 1 < count {
-                self.initial_state(&self.openings[opening + 1])
-            } else {
-                [Fp::ZERO; WIDTH]
-            };
-
-            if self.witness_path {
-                for (c, v) in reset.iter().enumerate() {
-                    cols[WIDTH + 2 + c].push(*v);
-                }
-            } else {
+            if !self.witness_path {
+                // Reset state to the next opening's initial, at an opening boundary
+                // (structurally zero for a single opening).
+                let reset = if is_op_boundary && opening + 1 < count {
+                    self.initial_state(&self.openings[opening + 1])
+                } else {
+                    [Fp::ZERO; WIDTH]
+                };
                 // Sibling and direction for the slot injection at `within`.
                 let m = (within + 1) / l;
                 let (dir, sib) =
