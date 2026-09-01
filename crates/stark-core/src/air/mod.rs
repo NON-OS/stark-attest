@@ -122,6 +122,7 @@ pub use index_scalar::IndexScalar;
 pub use measure::{measure_capsule, measure_capsule_hybrid};
 pub use merkle_membership::MerkleMembership;
 pub use multi_membership::{MultiMembership, Opening};
+pub use periodic_root::periodic_domain_log;
 pub use periodic_root::periodic_root;
 pub use periodic_z::PeriodicZ;
 pub use permutation::Permutation;

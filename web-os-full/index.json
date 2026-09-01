@@ -1,0 +1,712 @@
+{
+  "epoch": 1,
+  "policy_root": "24aa0cb7dca5a111728d04b04c1beb492d881dc0a6aa7c4af5eb03ee00c0399d",
+  "verified": 88,
+  "refused": 0,
+  "items": [
+  {
+    "caps": 0,
+    "handle": "the microkernel",
+    "kind": "kernel",
+    "measurement": "c195ea2029df356552e75ad65ef859b220ac7ff8bffbd84554e9e5752c0b4958",
+    "slug": "kernel",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 25,
+    "handle": "proof-io",
+    "kind": "capsule",
+    "measurement": "9b9b6bf48b9c4672c4d2cf2a80f4ee48753d67016f5196cad6e063dbd4a923ad",
+    "slug": "proof-io",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 281,
+    "handle": "std-proof",
+    "kind": "capsule",
+    "measurement": "64995fc8bbee48edb11124fa8b29df408c72f0786ea468c9c6dfc69e409cb9d2",
+    "slug": "std-proof",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 25,
+    "handle": "ripgrep",
+    "kind": "capsule",
+    "measurement": "d39680e6d3234228ac5eb6c410b6c9de13edc274d52a4b5f7979a21b9138b5e5",
+    "slug": "ripgrep",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 25,
+    "handle": "sd",
+    "kind": "capsule",
+    "measurement": "e3036a0cabab1f6eb9723b3c78f3cf4b5a439bd6f9281e361c79708327e0be57",
+    "slug": "sd",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 25,
+    "handle": "csview",
+    "kind": "capsule",
+    "measurement": "ab56de76952230a3569c28a343046ad4cafa3229e9c2b8fe221fe2353a680260",
+    "slug": "csview",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 25,
+    "handle": "huniq",
+    "kind": "capsule",
+    "measurement": "3034cdfcbb6db3a3b5656bf32e2f83c94975a5d89e65df2ae492805547f23459",
+    "slug": "huniq",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 25,
+    "handle": "tokei",
+    "kind": "capsule",
+    "measurement": "1402c3fa16b98f302c504c62e397499436a9bd0dc72de0a61e2da9df6cd1505e",
+    "slug": "tokei",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 25,
+    "handle": "jsonxf",
+    "kind": "capsule",
+    "measurement": "3915920f3d0129542a169cb47fa8033bae2c1fa9dbdcae645a9c86d21b8b56bd",
+    "slug": "jsonxf",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 25,
+    "handle": "pastel",
+    "kind": "capsule",
+    "measurement": "bcf65472f4a9ed31624b27f1de0c19b8da79152f6ebd82a8e298331f60a303f3",
+    "slug": "pastel",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 25,
+    "handle": "dotenv-linter",
+    "kind": "capsule",
+    "measurement": "906b1f84aa9b44749e16fb0bb0eb14bcdbba56299a65e3fd2d586592cd81da20",
+    "slug": "dotenv-linter",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 25,
+    "handle": "grex",
+    "kind": "capsule",
+    "measurement": "da80e857f3218a1fd128f9bf704e27ea030aaf005b2a5044e50c1a1aa67702eb",
+    "slug": "grex",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 285,
+    "handle": "tokio-smoke",
+    "kind": "capsule",
+    "measurement": "c3c7d51038effe81f66db1939f526ac770056a88d32ee812faed5dd8c2aecea7",
+    "slug": "tokio-smoke",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 56,
+    "handle": "ramfs",
+    "kind": "capsule",
+    "measurement": "bbbcfb9ce973091016866bffb3412fde7d800835598894463a915aa1f8e99b81",
+    "slug": "ramfs",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 57,
+    "handle": "keyring",
+    "kind": "capsule",
+    "measurement": "b341894564481a65d3ec0d297d02452547b4d89b26dd9f771caa0e7472c4f01c",
+    "slug": "keyring",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 57,
+    "handle": "entropy",
+    "kind": "capsule",
+    "measurement": "82d069328ad21847aad984829b822253c35a9143b9507c5379c16dfc16bfc1e1",
+    "slug": "entropy",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 57,
+    "handle": "crypto",
+    "kind": "capsule",
+    "measurement": "7eaa90b7d2a0128ecdde4be8d0f97d7b6439b01d5966104edd434a6818c50892",
+    "slug": "crypto",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 31001,
+    "handle": "compositor",
+    "kind": "capsule",
+    "measurement": "f7906df15baee7c8e0136ad2c2561dd7f05ffdee6ed5125efe715e9ceb24a727",
+    "slug": "compositor",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 2097177,
+    "handle": "input-router",
+    "kind": "capsule",
+    "measurement": "7e06ebefb1b638fafd2de60e11b384504c37a7b8bbf12abc129983fb770570fc",
+    "slug": "input-router",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 6425,
+    "handle": "input-proof",
+    "kind": "capsule",
+    "measurement": "9945789cb541ef2fbea46d671deb2aeee38522b60d4f55b0abc8c4ce9423d7d1",
+    "slug": "input-proof",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 6169,
+    "handle": "input-probe",
+    "kind": "capsule",
+    "measurement": "beac22ee40926a39be77a5510e03f01a75bfa3515afeb6de6556bfc80c458ca3",
+    "slug": "input-probe",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 6169,
+    "handle": "setup-wizard",
+    "kind": "capsule",
+    "measurement": "84aedf73d1e5c6e8562cb3058945bc86719a702a4ab0770a63d77e5e586e58e1",
+    "slug": "setup-wizard",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 25,
+    "handle": "wm",
+    "kind": "capsule",
+    "measurement": "081634af5ebf016781ffe792e61d0b4a88521664b4a264f0b8b3299ee143abd3",
+    "slug": "wm",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 16783645,
+    "handle": "desktop-shell",
+    "kind": "capsule",
+    "measurement": "82af158b7a06527a1194deedc006a36a1e1fa4312580d97f200049b420458550",
+    "slug": "desktop-shell",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 14361,
+    "handle": "image-codec",
+    "kind": "capsule",
+    "measurement": "74800eccf40b3bc825e9e968ac2e6e4cc2273acd7a71ef8d2154b5be90c1405b",
+    "slug": "image-codec",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 14681,
+    "handle": "image-viewer",
+    "kind": "capsule",
+    "measurement": "f8613a50e3fe87ebe77b508d4605e52cea26cd1591249234e8f40af38f1f2411",
+    "slug": "image-viewer",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 14425,
+    "handle": "video-player",
+    "kind": "capsule",
+    "measurement": "3fb7dd9a2fd6c72ec0b0efdd4ce26580f3e9019edf7ae50a60427dc70ed39ff0",
+    "slug": "video-player",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 25,
+    "handle": "clipboard",
+    "kind": "capsule",
+    "measurement": "15ee7289b449617a26f867969140e642d089c530cfefb61b68daa43704761e89",
+    "slug": "clipboard",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 25,
+    "handle": "login",
+    "kind": "capsule",
+    "measurement": "4e1bacab6c725448add4a70f8854d3fe9d90d94bb24ec685f7173e3671594f51",
+    "slug": "login",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 25,
+    "handle": "toolkit",
+    "kind": "capsule",
+    "measurement": "3baffb7f9e5ec40bcc5900915311466f080a113efe594a2f5913d3e0a9c7813d",
+    "slug": "toolkit",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 6169,
+    "handle": "about",
+    "kind": "capsule",
+    "measurement": "8cb9aa09dc03f30748ae3a502eb20b6306f701e982e48855e06936345a305efa",
+    "slug": "about",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 6169,
+    "handle": "hello",
+    "kind": "capsule",
+    "measurement": "7af0d6ff91cfbbad5961bc53cac2652085d9fe0aeeddde0052795fd27093654a",
+    "slug": "hello",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 6169,
+    "handle": "gui_demo",
+    "kind": "capsule",
+    "measurement": "36b7b81e82d8d33c95f53238d1b42893eea0079ad0ffb0181ca3dbf6b2db4c76",
+    "slug": "gui_demo",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 6169,
+    "handle": "game_2048",
+    "kind": "capsule",
+    "measurement": "8e74a14e957d4d2cf996122266c0e8e314a875b39dcd500e59fc7ca3cdacb38c",
+    "slug": "game_2048",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 6169,
+    "handle": "egui_proof",
+    "kind": "capsule",
+    "measurement": "88d2c4bd9219e2fa95abf62387d2f8e19362f04366205eb9a033edac43efae48",
+    "slug": "egui_proof",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 6233,
+    "handle": "mdview",
+    "kind": "capsule",
+    "measurement": "5c7bfb3937d957768c4022bf7b28f07bd42acae5dff835ee9c2f5ac2374ba5f8",
+    "slug": "mdview",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 6169,
+    "handle": "qrgen",
+    "kind": "capsule",
+    "measurement": "3cfb64f40fb66f9e5decc5ce56132b06b7e4a68326161e74e58ebc3933e0b5a5",
+    "slug": "qrgen",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 6169,
+    "handle": "boot-splash",
+    "kind": "capsule",
+    "measurement": "ddbb5f522fe342b85012fb5c0a1ed6cf5ce12fac97946d4837570c9df05e20c4",
+    "slug": "boot-splash",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 6169,
+    "handle": "calculator",
+    "kind": "capsule",
+    "measurement": "56899f5e8fe7dc54a2aeb0c9e95b542d1ecf8a32b443e76aab2c4e4e8c4f2d87",
+    "slug": "calculator",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 4200473,
+    "handle": "clock",
+    "kind": "capsule",
+    "measurement": "dce71c9fdfcb540589b7ab553142c3d14c5d9a2bf117e51bea83a44adea616a8",
+    "slug": "clock",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 6205,
+    "handle": "browser",
+    "kind": "capsule",
+    "measurement": "37558545499cf0d5c879ded39813d51e36f576abd88d86fed2c1eb5e736ccbc8",
+    "slug": "browser",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 6233,
+    "handle": "snake",
+    "kind": "capsule",
+    "measurement": "7d7ae712d9af47e5db800e27e9aac6279b514dfb34107133604f40088173bf6b",
+    "slug": "snake",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 6205,
+    "handle": "wallet-nonos",
+    "kind": "capsule",
+    "measurement": "3d23581b0b922f37d0e60e43effa5b646b2c190c10267662c712f86291a4dfbb",
+    "slug": "wallet-nonos",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 6269,
+    "handle": "terminal",
+    "kind": "capsule",
+    "measurement": "920d088f4275a34da0fc764afcc0e6a4a2c0cda1394cd43511b22b3add8d349a",
+    "slug": "terminal",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 6233,
+    "handle": "file-manager",
+    "kind": "capsule",
+    "measurement": "3c567856318829d21bba774155417ab578d203a77eaec051b405e9d3c5397fe5",
+    "slug": "file-manager",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 6233,
+    "handle": "text-editor",
+    "kind": "capsule",
+    "measurement": "54823e554c87c08fb04b6cb9daca5af8cb1e38fe2d7387358dd81d0ac45c4e58",
+    "slug": "text-editor",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 537,
+    "handle": "policy",
+    "kind": "capsule",
+    "measurement": "da53710fe5b9ed426588db65093a2dce57350fb146ec9ebd40ef38f42c6d8c2e",
+    "slug": "policy",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 25,
+    "handle": "wallpaper_catalog",
+    "kind": "capsule",
+    "measurement": "0bab1e36085442473f58a0f91f94bdba8e80c52d61aacb1fe30b7592f8e055db",
+    "slug": "wallpaper_catalog",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 38941,
+    "handle": "settings",
+    "kind": "capsule",
+    "measurement": "5c53068d798b71f94d8bd1fd560edc6dde6e809e0c53c02d457229ef4e1fbc29",
+    "slug": "settings",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 33560601,
+    "handle": "process-manager",
+    "kind": "capsule",
+    "measurement": "f5aca4172f8e296fc2e4d334c465295ea0904175b6e9e4958938d8b9426919cb",
+    "slug": "process-manager",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 335544601,
+    "handle": "vfs",
+    "kind": "capsule",
+    "measurement": "0212e6909bce9d807a48b26ddd6fe9d89f0429104059c860f96cf1bf13a77b69",
+    "slug": "vfs",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 57,
+    "handle": "market",
+    "kind": "capsule",
+    "measurement": "f1e5a1f3958358e945c5214e58bd9bed3d023e526728cb48fb16cb5e4d73bf02",
+    "slug": "market",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 25,
+    "handle": "payment",
+    "kind": "capsule",
+    "measurement": "5e9fc6b0293f75d445c7686ef40bb96fce42ba71b48fd11d5413ab30de425288",
+    "slug": "payment",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 8388697,
+    "handle": "installer",
+    "kind": "capsule",
+    "measurement": "48ca01976b660513d8b08752012ef7df8613e7534e460275de7de77bd230e6f1",
+    "slug": "installer",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 2064409,
+    "handle": "driver-virtio-rng",
+    "kind": "capsule",
+    "measurement": "19c3150f197a7a4ef72702ea9a2286e3aa24323cfc116722d53b925d05dbaeca",
+    "slug": "driver-virtio-rng",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 3506201,
+    "handle": "driver-ps2-input",
+    "kind": "capsule",
+    "measurement": "e863eb50fabc34d1b030457f9de8f1d789637d140adcc4451db6d313dcfee769",
+    "slug": "driver-ps2-input",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 2064665,
+    "handle": "driver-virtio-blk",
+    "kind": "capsule",
+    "measurement": "51633e0ecb4f09a4fa2367ef6257b6c8c225a2bdcce196e4a4de57838ec9898a",
+    "slug": "driver-virtio-blk",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 2068761,
+    "handle": "driver-virtio-gpu",
+    "kind": "capsule",
+    "measurement": "0a357d4af2eebeb6221b996f5bc1f0fd22b404e41092bc41b4c05c7cae2f1cd2",
+    "slug": "driver-virtio-gpu",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 2064665,
+    "handle": "driver-virtio-net",
+    "kind": "capsule",
+    "measurement": "99759803a9666d7572155e18e956ef6fa32bcc8b2e1d7ab4cc8944db30861962",
+    "slug": "driver-virtio-net",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 1015833,
+    "handle": "driver-iwlwifi",
+    "kind": "capsule",
+    "measurement": "ecb808a44333951106d8d3475eb8f8e62c4e47544284100fffba27f17277165e",
+    "slug": "driver-iwlwifi",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 1016121,
+    "handle": "driver-rtl8821ce",
+    "kind": "capsule",
+    "measurement": "c0ad3d49e9dda889a805f674d055759dee4502840651cd93907434dc463794ec",
+    "slug": "driver-rtl8821ce",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 491545,
+    "handle": "driver-i2c-pci",
+    "kind": "capsule",
+    "measurement": "9c9d5de19f3d3c98bd38bf4ba601bedebf34ca6d2e6cbee9a7f06cbcccdcc7f7",
+    "slug": "driver-i2c-pci",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 2097433,
+    "handle": "driver-i2c-hid",
+    "kind": "capsule",
+    "measurement": "053bf8348be53349cadee951ce4e230e287cd7c49990f6ee0eff905bbfefc9f6",
+    "slug": "driver-i2c-hid",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 1015833,
+    "handle": "driver-xhci",
+    "kind": "capsule",
+    "measurement": "3681a1599d0f6e445bcd17a1ed59ae0c384f34277cc951fbc8a483caf9748f13",
+    "slug": "driver-xhci",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 2097177,
+    "handle": "driver-usb-hid",
+    "kind": "capsule",
+    "measurement": "7b1dfb91dac9cbea83ccdbbc26cf7284f21c4d9da8708013d0e366859988edf3",
+    "slug": "driver-usb-hid",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 25,
+    "handle": "driver-usb-msc",
+    "kind": "capsule",
+    "measurement": "2b6ee8a5b86982a39159168d12c6ac511eab7731ae0c6cf255f3cd972efda9d9",
+    "slug": "driver-usb-msc",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 1015865,
+    "handle": "driver-e1000",
+    "kind": "capsule",
+    "measurement": "c34d4e31cb3e973f83c486d24abdd7d6d26f6de5b95a5ca76e22e20bbae83140",
+    "slug": "driver-e1000",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 1933337,
+    "handle": "driver-rtl8139",
+    "kind": "capsule",
+    "measurement": "d79e131122d3fa9caedf64689e79eeacdb712abcdd40b98483cd62ba3119546e",
+    "slug": "driver-rtl8139",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 1015833,
+    "handle": "driver-rtl8169",
+    "kind": "capsule",
+    "measurement": "07c8c53a5305b9566aa00ddefba3b6db0a21f50a2f06062952f1b2fc66d0f29c",
+    "slug": "driver-rtl8169",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 1015833,
+    "handle": "driver-ahci",
+    "kind": "capsule",
+    "measurement": "7c005825c39db63eeb58d56f119dd0ee8dccddc5251818576b3a007539717ae5",
+    "slug": "driver-ahci",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 1016089,
+    "handle": "driver-hda",
+    "kind": "capsule",
+    "measurement": "e0b60b6a390b3350c643b8645c218083ef9524c5ee2e70a1da31cdd43f6531f9",
+    "slug": "driver-hda",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 281,
+    "handle": "audio",
+    "kind": "capsule",
+    "measurement": "53870e7eec66a0d9fb76d2c60ac4aaa5cf299079eea05d4765fb317d6dddf0f2",
+    "slug": "audio",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 6489,
+    "handle": "audio_player",
+    "kind": "capsule",
+    "measurement": "2a70b551a4c1fd924c272d2d03bfcc523cf54a7495cbefe43e005e4a6cac2b9a",
+    "slug": "audio_player",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 1015833,
+    "handle": "driver-nvme",
+    "kind": "capsule",
+    "measurement": "41c9465c22179c4464ef8da0cd3146c761616193992f65a356777277bfaf56dd",
+    "slug": "driver-nvme",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 29,
+    "handle": "net-l2",
+    "kind": "capsule",
+    "measurement": "2baaec8a17c9989950a8ae61cd9a903fcdcddc490e40a040a128d891f72042cb",
+    "slug": "net-l2",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 1341,
+    "handle": "net-core",
+    "kind": "capsule",
+    "measurement": "9858c870fa96daee9cb73b6e4012fdd977a3042b10208456a2b1b51a1e719f2d",
+    "slug": "net-core",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 29,
+    "handle": "net-ip",
+    "kind": "capsule",
+    "measurement": "851e140819229a12050ef4e6a29dd01a16e8864761fe18f670ba8ab11ae12cad",
+    "slug": "net-ip",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 29,
+    "handle": "net-udp",
+    "kind": "capsule",
+    "measurement": "c9d0d121a0b41cfad1a08a63405e8c7555465d434dd508721381154b3a970145",
+    "slug": "net-udp",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 61,
+    "handle": "net-dhcp",
+    "kind": "capsule",
+    "measurement": "013860b0c4a3915ab3161ffc542b2d9a981644202faf25302fc992b2c9194c35",
+    "slug": "net-dhcp",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 61,
+    "handle": "net-tcp",
+    "kind": "capsule",
+    "measurement": "040463072a1688178c96c185b1c23940f7d228af63fa0e362df311c5d16b934a",
+    "slug": "net-tcp",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 61,
+    "handle": "net-dns",
+    "kind": "capsule",
+    "measurement": "d6006ad590825779a567a0e740985a421359202495627dfaa6b3a57e9cb8303c",
+    "slug": "net-dns",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 4194589,
+    "handle": "net-ntp",
+    "kind": "capsule",
+    "measurement": "0d21009dbf9c6b5d315f95f4f19b4539e0b2c7496ee5f9b7fc8dcf8edbd09e19",
+    "slug": "net-ntp",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 285,
+    "handle": "net-sockets",
+    "kind": "capsule",
+    "measurement": "94d18cf7ba213ff686ea181862be861e43460450f75b38fd1c2bdb738c726da4",
+    "slug": "net-sockets",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 317,
+    "handle": "net-nym",
+    "kind": "capsule",
+    "measurement": "7e6f7f26888b1c9fab55c0ececf18ab515849c8bde6cb4a39ef463e970aeb87d",
+    "slug": "net-nym",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 317,
+    "handle": "socks5",
+    "kind": "capsule",
+    "measurement": "93a2709bb32a60382ab81d72e559259938554934a08c5a9a6f1d690d711074f1",
+    "slug": "socks5",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 6169,
+    "handle": "wallpaper",
+    "kind": "capsule",
+    "measurement": "afc20a33360c1c6a23e2a339a7dda9184b04573be483ae92f9f5ebb4b8c6cb5f",
+    "slug": "wallpaper",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 25,
+    "handle": "attest",
+    "kind": "capsule",
+    "measurement": "e3e3ed9704016af80c461cd3b570c99fa4343b96b0f2a331e3e6c225c69c5375",
+    "slug": "attest",
+    "trailer_bytes": 327526
+  },
+  {
+    "caps": 537,
+    "handle": "power",
+    "kind": "capsule",
+    "measurement": "32d47ef171b468f8596b7da41640ef1375f2f5aec20c9e761a6bfc04de9a89c6",
+    "slug": "power",
+    "trailer_bytes": 327526
+  }
+  ]
+}

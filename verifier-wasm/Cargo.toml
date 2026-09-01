@@ -10,6 +10,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 nonos-stark = { path = "../crates/stark-core" }
+blake3 = { version = "1", default-features = false }
 
 [profile.release]
 opt-level = 3

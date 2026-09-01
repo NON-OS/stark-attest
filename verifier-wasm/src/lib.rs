@@ -112,3 +112,85 @@ pub unsafe extern "C" fn verify(
     let hasher = Poseidon::new(LOG_ROUNDS, [Fp::ZERO; RATE]);
     u32::from(verify_attestation_trailer(&hasher, LOG_ROUNDS, root_fp, N_QUERIES, trailer, context))
 }
+
+/// Fold a complete leaf set to its Merkle root, in the tree the deployment
+/// uses. `leaves` is `count` digests of `RATE` little-endian u64 lanes; the
+/// 32-byte root is written to `out`. Returns 1 on success, 0 on any
+/// malformed input.
+///
+/// This is what lets a browser reconstruct the policy root from the full
+/// enrolled set rather than trust the served copy: a membership proof shows
+/// one member, the fold shows there are no others.
+///
+/// # Safety
+/// `leaves` must point to `count * 32` readable bytes and `out` to 32
+/// writable bytes, both from `wasm_alloc`.
+#[no_mangle]
+pub unsafe extern "C" fn fold_root(leaves: *const u8, count: usize, out: *mut u8) -> u32 {
+    use nonos_stark::poseidon_merkle::PoseidonMerkleTree;
+    if leaves.is_null() || out.is_null() || count == 0 || !count.is_power_of_two() {
+        return 0;
+    }
+    let bytes = core::slice::from_raw_parts(leaves, count * 32);
+    let mut parsed = Vec::with_capacity(count);
+    for chunk in bytes.chunks_exact(32) {
+        let mut leaf = [Fp::ZERO; RATE];
+        for (i, lane) in leaf.iter_mut().enumerate() {
+            let mut w = [0u8; 8];
+            w.copy_from_slice(&chunk[i * 8..i * 8 + 8]);
+            let v = u64::from_le_bytes(w);
+            if v >= 0xFFFF_FFFF_0000_0001 {
+                return 0;
+            }
+            *lane = Fp::from_u64(v);
+        }
+        parsed.push(leaf);
+    }
+    let hasher = Poseidon::new(LOG_ROUNDS, [Fp::ZERO; RATE]);
+    let root = PoseidonMerkleTree::commit(&hasher, &parsed).root();
+    let o = core::slice::from_raw_parts_mut(out, 32);
+    for (i, lane) in root.iter().enumerate() {
+        o[i * 8..i * 8 + 8].copy_from_slice(&lane.value().to_le_bytes());
+    }
+    1
+}
+
+/// The measurement of the deployment's reserved-slot image, written to `out`.
+/// A page reconstructing a policy root needs this to check that every
+/// non-member slot really is the reserved pad and not a member in disguise;
+/// without that check, "the fold matches" only proves consistency with the
+/// served leaves, not that the set is complete.
+///
+/// # Safety
+/// `out` must point to 32 writable bytes from `wasm_alloc`.
+#[no_mangle]
+pub unsafe extern "C" fn reserved_leaf(out: *mut u8) -> u32 {
+    use nonos_stark::air::measure_capsule;
+    if out.is_null() {
+        return 0;
+    }
+    let hasher = Poseidon::new(LOG_ROUNDS, [Fp::ZERO; RATE]);
+    let leaf = measure_capsule(&hasher, b"\x00NONOS-POLICY-RESERVED-SLOT-v1");
+    let o = core::slice::from_raw_parts_mut(out, 32);
+    for (i, lane) in leaf.iter().enumerate() {
+        o[i * 8..i * 8 + 8].copy_from_slice(&lane.value().to_le_bytes());
+    }
+    1
+}
+
+/// BLAKE3 of `len` bytes at `data`, written to `out`. Exposed so a page can
+/// measure a multi-megabyte boot artifact at native speed and bind the digest
+/// it just computed, rather than one it was told.
+///
+/// # Safety
+/// `data` must point to `len` readable bytes, `out` to 32 writable bytes.
+#[no_mangle]
+pub unsafe extern "C" fn blake3_hash(data: *const u8, len: usize, out: *mut u8) -> u32 {
+    if data.is_null() || out.is_null() {
+        return 0;
+    }
+    let bytes = core::slice::from_raw_parts(data, len);
+    let digest = blake3::hash(bytes);
+    core::slice::from_raw_parts_mut(out, 32).copy_from_slice(digest.as_bytes());
+    1
+}

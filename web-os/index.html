@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NONOS attestation surface</title>
+<style>
+  :root {
+    --bg:#08090b; --panel:#0c0e11; --line:#191d23; --line2:#232830;
+    --ink:#e9edf2; --dim:#79828d; --faint:#4b535d;
+    --ok:#49c17e; --bad:#f0655a; --wait:#c9a341; --accent:#cbd3dc;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:var(--bg);color:var(--ink);
+    font-family:ui-sans-serif,-apple-system,"Inter","Segoe UI",Helvetica,Arial,sans-serif;
+    font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;
+    padding:clamp(1.5rem,5vh,4rem) 1.25rem 6rem;
+  }
+  .wrap{max-width:60rem;margin:0 auto}
+  .mono{font-family:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace}
+
+  .eyebrow{font-family:ui-monospace,monospace;font-size:.7rem;letter-spacing:.24em;
+    text-transform:uppercase;color:var(--dim);margin-bottom:2rem;display:flex;gap:.75rem;align-items:center}
+  .eyebrow::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  h1{font-size:clamp(1.8rem,4.6vw,2.7rem);line-height:1.1;font-weight:600;letter-spacing:-.02em;margin-bottom:1.1rem}
+  h1 .soft{color:var(--faint)}
+  .lede{color:var(--dim);max-width:44rem;font-size:1.02rem}
+  .lede b{color:var(--accent);font-weight:500}
+
+  .bar{
+    display:flex;flex-wrap:wrap;gap:1px;background:var(--line);border:1px solid var(--line);
+    border-radius:10px;overflow:hidden;margin:2.2rem 0 1.3rem;
+  }
+  .stat{background:var(--panel);padding:.9rem 1.15rem;flex:1;min-width:8.5rem}
+  .stat .n{font-family:ui-monospace,monospace;font-size:1.35rem;color:var(--ink);line-height:1.2}
+  .stat .n.ok{color:var(--ok)} .stat .n.run{color:var(--wait)}
+  .stat .l{font-size:.72rem;color:var(--dim);text-transform:uppercase;letter-spacing:.12em;margin-top:.15rem}
+
+  .root{font-family:ui-monospace,monospace;font-size:.78rem;color:var(--dim);
+    word-break:break-all;margin:.2rem 0 1.6rem}
+  .root b{color:var(--accent);font-weight:500}
+
+  .actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-bottom:1.8rem}
+  button{font:inherit;font-size:.9rem;font-weight:500;cursor:pointer;border-radius:8px;
+    padding:.65rem 1.35rem;border:1px solid var(--line2);background:#12151a;color:var(--ink);transition:.15s}
+  button:hover:not(:disabled){border-color:#333b45;background:#171b21}
+  button.primary{border-color:rgba(73,193,126,.4);background:rgba(73,193,126,.09);color:var(--ok)}
+  button.primary:hover:not(:disabled){background:rgba(73,193,126,.15)}
+  button:disabled{opacity:.4;cursor:default}
+
+  table{width:100%;border-collapse:collapse;font-size:.86rem}
+  thead th{text-align:left;font-family:ui-monospace,monospace;font-size:.68rem;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--faint);font-weight:500;padding:.5rem .7rem;border-bottom:1px solid var(--line)}
+  tbody td{padding:.7rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
+  tbody tr:hover{background:#0d0f13}
+  .name{font-weight:500}
+  .name .h{display:block;font-size:.76rem;color:var(--dim);font-weight:400}
+  .kind{font-family:ui-monospace,monospace;font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;
+    padding:.12rem .45rem;border-radius:4px;border:1px solid var(--line2);color:var(--dim)}
+  .kind.kernel{color:var(--accent);border-color:#39414c}
+  .caps{display:flex;flex-wrap:wrap;gap:.28rem;max-width:22rem}
+  .cap{font-family:ui-monospace,monospace;font-size:.68rem;color:var(--dim);
+    background:#101318;border:1px solid var(--line);border-radius:4px;padding:.06rem .38rem;white-space:nowrap}
+  .meas{font-family:ui-monospace,monospace;font-size:.74rem;color:var(--faint)}
+  .verdict{font-family:ui-monospace,monospace;font-size:.78rem;white-space:nowrap}
+  .verdict.ok{color:var(--ok)} .verdict.bad{color:var(--bad)} .verdict.run{color:var(--wait)} .verdict.idle{color:var(--faint)}
+  .rowbtn{font-size:.72rem;padding:.28rem .7rem;border-radius:6px}
+
+  .prose{margin-top:3.4rem;color:var(--dim);font-size:.92rem}
+  .prose h2{font-family:ui-monospace,monospace;font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--faint);font-weight:500;margin:2.2rem 0 .8rem}
+  .prose p{margin-bottom:.9rem}
+  .prose b{color:var(--accent);font-weight:500}
+  .prose code{font-size:.85em;background:#12151a;border:1px solid var(--line);border-radius:5px;padding:.08em .4em;color:var(--ink)}
+  .prose a{color:var(--ink);border-bottom:1px solid var(--faint);text-decoration:none}
+  .foot{margin-top:3rem;padding-top:1.4rem;border-top:1px solid var(--line);color:var(--faint);
+    font-size:.8rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+  .foot a{color:var(--dim);text-decoration:none}
+  .recon{font-size:.85rem;color:var(--dim);border:1px solid var(--line);border-radius:8px;padding:.75rem 1rem;margin-bottom:1.6rem;line-height:1.55}
+  .recon.ok{color:var(--ok);border-color:rgba(73,193,126,.3);background:rgba(73,193,126,.05)}
+  .recon.bad{color:var(--bad);border-color:rgba(240,101,90,.4)}
+  .scroll{overflow-x:auto}
+  .dimc{color:var(--faint)}
+  .drow td{padding:0;border:0}
+  .detail{display:grid;grid-template-columns:1fr 1fr;gap:2rem;padding:.3rem .7rem 1.4rem 1rem;
+    background:#0a0c0f;border-left:2px solid var(--line2);margin:0 0 .2rem}
+  .detail .col{min-width:0}
+  .ch{font-family:ui-monospace,monospace;font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--wait);margin:.9rem 0 .7rem}
+  .pl{display:grid;grid-template-columns:3rem 12rem 1fr;gap:.6rem;align-items:baseline;padding:.22rem 0;
+    font-size:.76rem;border-bottom:1px solid #14171c}
+  .pl .lv{font-family:ui-monospace,monospace;color:var(--faint);font-size:.68rem}
+  .pl .sib{color:var(--ink)} .pl .dir{color:var(--dim);font-size:.72rem}
+  .fl{display:grid;grid-template-columns:4.5rem 1fr auto;gap:.5rem;align-items:baseline;padding:.16rem 0;font-size:.74rem}
+  .fl .lv{font-family:ui-monospace,monospace;color:var(--faint);font-size:.66rem} .fl .dom{color:var(--faint);font-size:.68rem}
+  .kv{display:flex;justify-content:space-between;gap:1rem;padding:.22rem 0;font-size:.78rem;border-bottom:1px solid #14171c}
+  .kv span:first-child{color:var(--dim)} .kv span:last-child{color:var(--ink)}
+  .done{margin-top:.9rem;color:var(--ok);font-size:.76rem;line-height:1.5}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow">NONOS &nbsp;·&nbsp; attestation surface</div>
+
+  <h1>The whole operating system,<br><span class="soft">proven, in your browser.</span></h1>
+  <p class="lede">The kernel and every enrolled capsule carry a transparent
+  post-quantum STARK proof of membership under one 32-byte policy root. This
+  page verifies all of them, one by one, using the same gate the kernel runs at
+  spawn, compiled to WebAssembly. <b>No trusted setup, nothing sent anywhere.</b>
+  Each proof binds the exact binary and the exact capabilities it was granted.</p>
+
+  <div class="bar">
+    <div class="stat"><div class="n" id="s-total">–</div><div class="l">attestations</div></div>
+    <div class="stat"><div class="n ok" id="s-ok">0</div><div class="l">verified here</div></div>
+    <div class="stat"><div class="n" id="s-ms">–</div><div class="l">median verify</div></div>
+    <div class="stat"><div class="n mono" id="s-params">32q · 32r</div><div class="l">queries · rounds</div></div>
+  </div>
+
+  <div class="root">policy root &nbsp;<b id="root">loading</b> &nbsp;·&nbsp; epoch <span id="epoch">–</span> &nbsp;·&nbsp; tree depth 8 &nbsp;·&nbsp; Poseidon over Goldilocks, FRI</div>
+
+  <div class="recon" id="recon">reconstructing the tree…</div>
+
+  <div class="actions">
+    <button class="primary" id="verify-all" disabled>verify the entire system</button>
+    <button id="reset" disabled>reset</button>
+  </div>
+
+  <div class="scroll">
+  <table>
+    <thead><tr>
+      <th>unit</th><th>kind</th><th>capabilities</th><th>measurement</th><th>proof</th><th>status</th><th></th>
+    </tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  </div>
+
+  <div class="prose">
+    <h2>what this verifies</h2>
+    <p>Each row is a STARK proof that a specific binary, identified by its BLAKE3
+    measurement, is an enrolled member of the set the policy root commits to,
+    bound to the exact capability mask that binary was granted. The verifier is
+    the same <code>verify_attestation_trailer</code> the kernel runs before it
+    spawns a capsule and the bootloader runs before it jumps to the kernel,
+    compiled to 90 KB of WebAssembly from
+    <a href="https://github.com/NON-OS/stark-attest">NON-OS/stark-attest</a>.</p>
+    <p>Verifying here proves the proof is valid under this root for these
+    capabilities. It does not prove the binary you run is this one; that link is
+    the measurement, which you reproduce with <code>b3sum</code> against the
+    image. A capability shown as granted is one the proof itself binds, not a
+    claim in a config file.</p>
+    <h2>the parameters</h2>
+    <p>Width-8 Poseidon, 32 rounds, x^7 S-box; FRI with 32 queries, 16 grinding
+    bits, blowup of 4 bits; a depth-8 policy tree. Constants derived from a
+    public rule and re-checked in CI, soundness published under both the
+    provable and the conjectured model. No elliptic curves, so the whole thing
+    is post-quantum by construction.</p>
+  </div>
+
+  <div class="foot">
+    <span>NONOS &nbsp;·&nbsp; AGPL-3.0-or-later</span>
+    <span><a href="https://github.com/NON-OS/stark-attest">github.com/NON-OS/stark-attest</a></span>
+  </div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
