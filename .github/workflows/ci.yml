@@ -23,6 +23,8 @@ jobs:
         run: cargo test -p nonos-stark --lib
       - name: unit tests, parallel prover
         run: cargo test -p nonos-stark --lib --features parallel
+      - name: the version the consumers pin
+        run: grep -q '^version = "0.2.' crates/stark-core/Cargo.toml
       - name: adversarial suite
         run: cargo test -p stark-attest --test attacks --release
       - name: committer agreement
