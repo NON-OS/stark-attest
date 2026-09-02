@@ -99,20 +99,20 @@ function refresh() { $("s-ok").textContent = times.length; if (times.length) $("
 
 function detailHtml(it, a, meas, ms) {
   const path = a.siblings.map((s, i) =>
-    `<div class="pl"><span class="lv">L${i}</span><span class="sib mono">${short(s, 14)}</span><span class="dir">${a.dirs[i] ? "node is right child" : "node is left child"}</span></div>`
+    `<div class="pl"><span class="lv">L${i}</span><span class="sib mono full">${s}</span><span class="dir">${a.dirs[i] ? "node is right child" : "node is left child"}</span></div>`
   ).join("");
-  const roots = a.friRoots.map((r, i) => `<div class="fl"><span class="lv">fold ${i}</span><span class="mono">${short(r, 14)}</span><span class="dom">domain / ${2 ** (i + 1)}</span></div>`).join("");
+  const roots = a.friRoots.map((r, i) => `<div class="fl"><span class="lv">fold ${i}</span><span class="mono full">${r}</span><span class="dom">domain / ${2 ** (i + 1)}</span></div>`).join("");
   return `<div class="detail">
     <div class="col">
-      <div class="ch">Merkle authentication path &nbsp; depth ${a.depth}</div>
-      <div class="pl"><span class="lv">leaf</span><span class="sib mono">${short(meas, 14)}</span><span class="dir">measured binary, capabilities, epoch</span></div>
+      <div class="ch">Merkle authentication path &nbsp; slot ${slotOf(cache[it.slug].tr)} / 256 &nbsp; depth ${a.depth}</div>
+      <div class="pl"><span class="lv">leaf</span><span class="sib mono full">${meas}</span><span class="dir">BLAKE3 of the binary, bound with capabilities and epoch</span></div>
       ${path}
-      <div class="pl"><span class="lv">root</span><span class="sib mono">${short(index.policy_root, 14)}</span><span class="dir">the committed statement</span></div>
+      <div class="pl"><span class="lv">root</span><span class="sib dir">folds to the policy root in the header, or verification fails</span><span class="dir"></span></div>
     </div>
     <div class="col">
       <div class="ch">STARK proof anatomy</div>
-      <div class="kv"><span>trace commitment</span><span class="mono">${short(a.traceRoot, 14)}</span></div>
-      <div class="kv"><span>composition commitment</span><span class="mono">${short(a.compRoot, 14)}</span></div>
+      <div class="kv"><span>trace commitment</span><span class="mono full">${a.traceRoot}</span></div>
+      <div class="kv"><span>composition commitment</span><span class="mono full">${a.compRoot}</span></div>
       <div class="kv"><span>out-of-domain frame</span><span class="mono">${a.oodLen} field elements</span></div>
       <div class="kv"><span>FRI folding layers</span><span class="mono">${a.friLayers}</span></div>
       ${roots}
@@ -163,7 +163,7 @@ function render() {
       <td class="name">${it.slug}<span class="h">${it.handle}</span></td>
       <td><span class="kind ${it.kind}">${it.kind}</span></td>
       <td><div class="caps">${caps}</div></td>
-      <td class="meas mono">${it.measurement.slice(0, 14)}…</td>
+      <td class="meas mono" title="${it.measurement}">${it.measurement.slice(0, 16)}…</td>
       <td class="mono dimc">${(it.trailer_bytes / 1024).toFixed(0)} KB</td>
       <td><span class="verdict idle" id="v-${it.slug}">not yet</span></td>
       <td><button class="rowbtn" data-s="${it.slug}">inspect</button></td>`;
