@@ -11,33 +11,33 @@
   "measurements": [
     {
       "artifact_bytes": 4096,
-      "poseidon_direct_ns": 1664767,
-      "blake3_only_ns": 1873,
-      "hybrid_ns": 14692,
-      "poseidon_mb_per_s": 2.46,
-      "blake3_mb_per_s": 2186.87,
-      "hybrid_mb_per_s": 278.79,
-      "hybrid_speedup": 113.3
+      "poseidon_direct_ns": 1780386,
+      "blake3_only_ns": 1513,
+      "hybrid_ns": 13365,
+      "poseidon_mb_per_s": 2.30,
+      "blake3_mb_per_s": 2707.20,
+      "hybrid_mb_per_s": 306.47,
+      "hybrid_speedup": 133.2
     },
     {
       "artifact_bytes": 65536,
-      "poseidon_direct_ns": 26620147,
-      "blake3_only_ns": 18617,
-      "hybrid_ns": 31436,
-      "poseidon_mb_per_s": 2.46,
-      "blake3_mb_per_s": 3520.22,
-      "hybrid_mb_per_s": 2084.74,
-      "hybrid_speedup": 846.8
+      "poseidon_direct_ns": 24658966,
+      "blake3_only_ns": 15319,
+      "hybrid_ns": 27191,
+      "poseidon_mb_per_s": 2.66,
+      "blake3_mb_per_s": 4278.09,
+      "hybrid_mb_per_s": 2410.21,
+      "hybrid_speedup": 906.9
     },
     {
       "artifact_bytes": 1048576,
-      "poseidon_direct_ns": 426439942,
-      "blake3_only_ns": 298541,
-      "hybrid_ns": 311369,
-      "poseidon_mb_per_s": 2.46,
-      "blake3_mb_per_s": 3512.33,
-      "hybrid_mb_per_s": 3367.63,
-      "hybrid_speedup": 1369.6
+      "poseidon_direct_ns": 394075256,
+      "blake3_only_ns": 247270,
+      "hybrid_ns": 259333,
+      "poseidon_mb_per_s": 2.66,
+      "blake3_mb_per_s": 4240.61,
+      "hybrid_mb_per_s": 4043.36,
+      "hybrid_speedup": 1519.6
     }
   ]
 }
