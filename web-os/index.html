@@ -81,6 +81,17 @@
   .recon{font-size:.85rem;color:var(--dim);border:1px solid var(--line);border-radius:8px;padding:.75rem 1rem;margin-bottom:1.6rem;line-height:1.55}
   .recon.ok{color:var(--ok);border-color:rgba(73,193,126,.3);background:rgba(73,193,126,.05)}
   .recon.bad{color:var(--bad);border-color:rgba(240,101,90,.4)}
+  .panelb{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:1.1rem 1.3rem;margin-bottom:1.8rem}
+  .panel-head2{font-family:ui-monospace,monospace;font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--wait);margin-bottom:.6rem}
+  .pbody{color:var(--dim);font-size:.88rem;margin-bottom:1rem;max-width:46rem}
+  .chainrow{display:flex;gap:.9rem;flex-wrap:wrap;align-items:stretch;margin-bottom:.6rem}
+  .dropzone{flex:1;min-width:16rem;border:1px dashed var(--line2);border-radius:8px;color:var(--faint);
+    font-size:.82rem;display:flex;align-items:center;justify-content:center;padding:.6rem 1rem;transition:.15s}
+  .dropzone.hot{border-color:var(--ok);color:var(--ok);background:rgba(73,193,126,.05)}
+  .cl{font-family:ui-monospace,monospace;font-size:.78rem;padding:.28rem 0;line-height:1.5}
+  .cl.ok{color:var(--ink)} .cl.ok::before{content:"ok   ";color:var(--ok)}
+  .cl.bad{color:var(--bad)} .cl.run{color:var(--dim)}
+  .cl.done{color:var(--ok);margin-top:.4rem;font-weight:600}
   .scroll{overflow-x:auto}
   .dimc{color:var(--faint)}
   .drow td{padding:0;border:0}
@@ -123,6 +134,21 @@
   <div class="root">policy root &nbsp;<b id="root">loading</b> &nbsp;·&nbsp; epoch <span id="epoch">–</span> &nbsp;·&nbsp; tree depth 8 &nbsp;·&nbsp; Poseidon over Goldilocks, FRI</div>
 
   <div class="recon" id="recon">reconstructing the tree…</div>
+
+  <div class="panelb">
+    <div class="panel-head2">boot chain, from the artifacts themselves</div>
+    <p class="pbody">The strongest form of this page: no fixture files on the
+    trust path at all. The shipping kernel image carries its proof in a
+    NONOSIMG footer; the bootloader binary carries the root it enforces. Drop
+    your own downloaded copies below, or run it on the bundled ones, and your
+    browser parses the footer, measures the 90 MiB body, extracts the root
+    from the bootloader, and closes the chain.</p>
+    <div class="chainrow">
+      <button id="chain-default">verify the bundled shipping artifacts</button>
+      <div id="dropzone" class="dropzone">or drop kernel_attested.bin and nonos_boot.efi here</div>
+    </div>
+    <div id="chain-log"></div>
+  </div>
 
   <div class="actions">
     <button class="primary" id="verify-all" disabled>verify the entire system</button>

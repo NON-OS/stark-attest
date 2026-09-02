@@ -53,6 +53,28 @@ function anatomy(trailer) {
   return { depth, siblings, dirs, traceRoot, compRoot, oodLen, friLayers, friRoots, finalLen, friQueries };
 }
 
+const unhex = h => new Uint8Array(h.match(/../g).map(x => parseInt(x, 16)));
+
+// The context is rebuilt here from the values shown on screen, never fetched.
+// What the proof binds is therefore exactly what the visitor reads: the
+// measurement, the capability mask, the epoch. A served context could bind
+// anything; a reconstructed one cannot.
+function buildContext(it) {
+  const meas = unhex(it.measurement);
+  const be = n => { const b = new Uint8Array(8); let v = BigInt(n); for (let i = 7; i >= 0; i--) { b[i] = Number(v & 0xffn); v >>= 8n; } return b; };
+  if (it.kind === "kernel") {
+    const c = new Uint8Array(40); c.set(meas, 0); c.set(be(index.epoch), 32); return c;
+  }
+  const c = new Uint8Array(48); c.set(meas, 0); c.set(be(it.caps), 32); c.set(be(index.epoch), 40); return c;
+}
+
+function reservedLeaf() {
+  const o = wasm.wasm_alloc(32);
+  wasm.reserved_leaf(o);
+  const r = new Uint8Array(mem.buffer, o, 32).slice();
+  wasm.wasm_free(o, 32); return r;
+}
+
 function foldRoot(leaves) {
   const p = push(leaves), o = wasm.wasm_alloc(32);
   const t0 = performance.now();
@@ -105,11 +127,16 @@ async function verifyOne(it) {
   const root = it.kind === "kernel" ? kernelRoot : policyRoot;
   $("v-" + it.slug).className = "verdict run"; $("v-" + it.slug).textContent = "verifying";
   if (!cache[it.slug]) {
-    const [tr, ctx] = await Promise.all([bytes(it.slug + ".trailer.bin"), bytes(it.slug + ".context.bin")]);
-    cache[it.slug] = { tr, ctx };
+    cache[it.slug] = { tr: await bytes(it.slug + ".trailer.bin") };
   }
-  const { tr, ctx } = cache[it.slug];
+  const { tr } = cache[it.slug];
+  const ctx = buildContext(it);
   const res = gate(root, tr, ctx);
+  // the proof's Merkle directions are its slot address; a capsule must sit at
+  // its enrollment position and the kernel at slot zero of its own tree
+  const slot = slotOf(tr);
+  const expect = it.kind === "kernel" ? 0 : index.items.filter(x => x.kind === "capsule").indexOf(it);
+  if (res.ok && slot !== expect) { res.ok = false; res.misplaced = slot; }
   const a = anatomy(tr);
   const meas = hex(ctx.slice(0, 32));
   const det = $("d-" + it.slug);
@@ -119,7 +146,8 @@ async function verifyOne(it) {
     det.innerHTML = detailHtml(it, a, meas, res.ms);
     det.style.display = "";
   } else {
-    $("v-" + it.slug).className = "verdict bad"; $("v-" + it.slug).textContent = "REFUSED";
+    $("v-" + it.slug).className = "verdict bad";
+    $("v-" + it.slug).textContent = res.misplaced !== undefined ? "WRONG SLOT " + res.misplaced : "REFUSED";
   }
   refresh();
   return res.ok;
@@ -146,6 +174,87 @@ function render() {
   }
   tb.querySelectorAll("button").forEach(b => { b.onclick = () => verifyOne(index.items.find(x => x.slug === b.dataset.s)); });
 }
+
+// ---- the boot chain, from the artifacts themselves -------------------------
+function b3(bytes) {
+  const p = push(bytes), o = wasm.wasm_alloc(32);
+  wasm.blake3_hash(p, bytes.length, o);
+  const d = new Uint8Array(mem.buffer, o, 32).slice();
+  wasm.wasm_free(p, bytes.length); wasm.wasm_free(o, 32); return d;
+}
+function findOnce(hay, needle) {
+  let hits = 0, at = -1;
+  outer: for (let i = 0; i <= hay.length - needle.length; i++) {
+    for (let j = 0; j < needle.length; j++) if (hay[i + j] !== needle[j]) continue outer;
+    hits++; at = i; if (hits > 1) break;
+  }
+  return { hits, at };
+}
+function chainLine(cls, text) {
+  const el = document.createElement("div"); el.className = "cl " + cls; el.textContent = text;
+  $("chain-log").appendChild(el);
+}
+async function runChain(imgBytes, efiBytes) {
+  $("chain-log").innerHTML = "";
+  try {
+    const dv = new DataView(imgBytes.buffer, imgBytes.byteOffset);
+    const foot = imgBytes.length - 64;
+    if (new TextDecoder().decode(imgBytes.slice(foot, foot + 8)) !== "NONOSIMG")
+      return chainLine("bad", "not a NONOS image: footer magic missing");
+    const kOff = dv.getUint32(foot + 24, true), kSize = dv.getUint32(foot + 28, true);
+    const pOff = dv.getUint32(foot + 40, true), pSize = dv.getUint32(foot + 44, true);
+    const rollback = dv.getUint32(foot + 56, true);
+    const kernel = imgBytes.slice(kOff, kOff + kSize);
+    const trailer = imgBytes.slice(pOff, pOff + pSize);
+    chainLine("ok", `image footer parsed: kernel body ${kSize.toLocaleString()} bytes, embedded trailer ${pSize.toLocaleString()} bytes, rollback index ${rollback}`);
+    if (new TextDecoder().decode(trailer.slice(0, 8)) !== "NZKSTRK1")
+      return chainLine("bad", "embedded proof is not a STARK trailer");
+
+    const boot = findOnce(efiBytes, kernelRoot);
+    if (boot.hits !== 1) return chainLine("bad", `boot root found ${boot.hits} times in the bootloader; expected exactly one`);
+    chainLine("ok", `boot root extracted from the bootloader binary, offset ${boot.at.toLocaleString()}, unique`);
+
+    const t0 = performance.now();
+    const meas = b3(kernel);
+    chainLine("ok", `kernel measured in-wasm: BLAKE3 ${hex(meas).slice(0, 20)}… (${(kSize / 1048576).toFixed(0)} MiB in ${(performance.now() - t0).toFixed(0)} ms)`);
+
+    const ctx = new Uint8Array(40); ctx.set(meas, 0); ctx[39] = 1;
+    const res = gate(efiBytes.slice(boot.at, boot.at + 32), trailer, ctx);
+    if (!res.ok) return chainLine("bad", "the STARK inside the image is REFUSED by the root inside the bootloader");
+    chainLine("ok", `STARK from inside the image verified against the root from inside the bootloader, ${res.ms.toFixed(0)} ms`);
+
+    const pol = findOnce(kernel, unhex(index.policy_root));
+    if (pol.hits < 1) return chainLine("bad", "the capsule policy root is not embedded in this kernel");
+    chainLine("ok", `capsule policy root found embedded in the kernel body, offset ${pol.at.toLocaleString()}: the chain continues to every capsule verified above`);
+    chainLine("done", "boot chain closed: bootloader to kernel to policy root to capsules, every link from the artifacts themselves");
+  } catch (e) { chainLine("bad", "chain failed: " + e.message); }
+}
+
+$("chain-default").onclick = async () => {
+  $("chain-default").disabled = true;
+  chainLine("run", "fetching the bundled shipping artifacts…");
+  try {
+    const [img, efi] = await Promise.all([bytes("kernel_attested.bin"), bytes("nonos_boot.efi")]);
+    await runChain(img, efi);
+  } catch (e) { chainLine("bad", e.message); }
+  $("chain-default").disabled = false;
+};
+const dz = $("dropzone");
+dz.ondragover = e => { e.preventDefault(); dz.classList.add("hot"); };
+dz.ondragleave = () => dz.classList.remove("hot");
+dz.ondrop = async e => {
+  e.preventDefault(); dz.classList.remove("hot");
+  const files = [...e.dataTransfer.files];
+  let img = null, efi = null;
+  for (const f of files) {
+    const b = new Uint8Array(await f.arrayBuffer());
+    if (b.length > 64 && new TextDecoder().decode(b.slice(b.length - 64, b.length - 56)) === "NONOSIMG") img = b;
+    else if (b[0] === 0x4d && b[1] === 0x5a) efi = b;
+  }
+  if (!img) return chainLine("bad", "drop the kernel image (kernel_attested.bin) and optionally the bootloader (nonos_boot.efi)");
+  if (!efi) { chainLine("run", "no bootloader dropped, using the bundled one"); efi = await bytes("nonos_boot.efi"); }
+  await runChain(img, efi);
+};
 
 $("verify-all").onclick = async () => {
   $("verify-all").disabled = true; $("reset").disabled = true;
@@ -174,13 +283,17 @@ $("reset").onclick = () => {
       const f = foldRoot(leaves), fk = foldRoot(kleaves);
       const match = f.ok && hex(f.root) === index.policy_root;
       const kmatch = fk.ok && hex(fk.root) === hex(kernelRoot);
+      const pad = hex(reservedLeaf());
+      let padOk = true;
+      for (let i = members; i < 256; i++) if (hex(leaves.slice(i * 32, i * 32 + 32)) !== pad) padOk = false;
+      for (let i = 1; i < 256; i++) if (hex(kleaves.slice(i * 32, i * 32 + 32)) !== pad) padOk = false;
       const el = $("recon");
-      if (match && kmatch) {
+      if (match && kmatch && padOk) {
         el.className = "recon ok";
-        el.innerHTML = `set transparency: this page just refolded the complete tree, all 256 slots, ${members} members plus ${256 - members} reserved, through 255 Poseidon compressions in ${(f.ms + fk.ms).toFixed(0)} ms, and reproduced both roots exactly. Nothing else is enrolled under them.`;
+        el.innerHTML = `set transparency: this page just refolded the complete tree, all 256 slots, ${members} members plus ${256 - members} reserved, through 255 Poseidon compressions in ${(f.ms + fk.ms).toFixed(0)} ms, and reproduced both roots exactly, and confirmed every one of the ${256 - members + 255} remaining slots is the reserved pad. Under these roots, these members exist and nothing else does.`;
       } else {
         el.className = "recon bad";
-        el.textContent = "ROOT RECONSTRUCTION FAILED: the served leaf set does not fold to the enforced root";
+        el.textContent = padOk ? "ROOT RECONSTRUCTION FAILED: the leaf set does not fold to the enforced root" : "COMPLETENESS FAILED: a non-member slot is not the reserved pad";
       }
     } catch (e) { $("recon").textContent = "leaf set unavailable: " + e.message; }
     render();
