@@ -119,6 +119,22 @@ jobs:
           # two the development permits; anything else fails the gate
           ! grep -E "axioms" /tmp/axioms.out | grep -vE "does not depend|propext|Quot.sound|Classical.choice"
 
+  fuzz:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: nightly toolchain
+        run: rustup toolchain install nightly --profile minimal && rustup default nightly
+      - name: cargo-fuzz
+        run: cargo install cargo-fuzz --locked
+      - name: five minutes per target, any crash fails the build
+        run: |
+          set -euo pipefail
+          for t in trailer proof_ext aggregate; do
+            cargo +nightly fuzz run "$t" -- -max_total_time=300 -print_final_stats=1
+          done
+
   nix:
     runs-on: ubuntu-latest
     steps:
