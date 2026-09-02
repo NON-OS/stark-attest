@@ -3,213 +3,178 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NONOS :: attestation surface</title>
+<title>nonos-verify(1)</title>
 <style>
-  :root {
-    --bg:#050705; --bg2:#070a07; --line:#0f1a0f; --line2:#1a2e1a;
-    --ink:#b8e6b8; --hi:#e8ffe8; --dim:#5a8a5a; --faint:#2e4e2e;
-    --ok:#33ff66; --bad:#ff4433; --warn:#ffcc33; --cy:#33ddff;
+  :root{
+    --bg:#0a0c0a; --ink:#9db89d; --hi:#d8e8d8; --dim:#5f7a5f; --faint:#3a4d3a;
+    --ok:#4ade80; --bad:#f87171; --warn:#d9b84a; --link:#6ee7b7;
   }
   *{margin:0;padding:0;box-sizing:border-box}
   html{-webkit-text-size-adjust:100%}
   body{
     background:var(--bg);color:var(--ink);
-    font-family:ui-monospace,"SF Mono","JetBrains Mono","Fira Code",Menlo,Consolas,monospace;
-    font-size:14px;line-height:1.6;
-    padding:clamp(1.2rem,4vh,3rem) 1rem 5rem;
+    font:13px/1.55 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    padding:2.2rem 1rem 4rem;
   }
-  body::before{
-    content:"";position:fixed;inset:0;pointer-events:none;z-index:9;
-    background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(0,0,0,.12) 2px 4px);
-  }
-  .wrap{max-width:62rem;margin:0 auto;position:relative;z-index:1}
+  .wrap{max-width:88ch;margin:0 auto}
   .mono{font-family:inherit}
 
-  .topline{color:var(--faint);font-size:.75rem;letter-spacing:.08em;white-space:pre;overflow-x:auto;margin-bottom:.4rem}
-  .eyebrow{color:var(--dim);font-size:.75rem;letter-spacing:.25em;margin-bottom:1.6rem}
-  .eyebrow b{color:var(--ok);font-weight:400}
-  .eyebrow .blink{animation:bl 1.1s steps(1) infinite;color:var(--ok)}
-  @keyframes bl{50%{opacity:0}}
+  .man{display:flex;justify-content:space-between;color:var(--dim);margin-bottom:1.6rem}
+  .man b{color:var(--ink);font-weight:400}
 
-  h1{font-size:clamp(1.3rem,3.6vw,2rem);font-weight:700;line-height:1.25;
-     color:var(--hi);letter-spacing:.01em;margin-bottom:1rem;text-transform:uppercase}
-  h1 .soft{color:var(--dim);display:block;font-size:.72em;font-weight:400;text-transform:none}
-  .lede{color:var(--dim);max-width:52rem;font-size:.86rem;margin-bottom:1.8rem}
-  .lede b{color:var(--ink);font-weight:400}
+  .cmd{color:var(--hi);margin:1.2rem 0 .3rem;white-space:pre-wrap}
+  .cmd::before{content:"$ ";color:var(--dim)}
+  .out{color:var(--dim);margin-bottom:1rem;white-space:pre-wrap}
 
-  .bar{display:flex;flex-wrap:wrap;border:1px solid var(--line2);margin:0 0 1rem;background:var(--bg2)}
-  .stat{padding:.7rem 1.1rem;flex:1;min-width:8rem;border-right:1px solid var(--line)}
-  .stat:last-child{border-right:0}
-  .stat .n{font-size:1.3rem;color:var(--hi);line-height:1.2}
-  .stat .n.ok{color:var(--ok);text-shadow:0 0 8px rgba(51,255,102,.4)}
-  .stat .n.run{color:var(--warn)}
-  .stat .l{font-size:.65rem;color:var(--dim);text-transform:uppercase;letter-spacing:.18em;margin-top:.1rem}
+  h1{font-size:1em;font-weight:700;color:var(--hi);margin:1.6rem 0 .5rem;letter-spacing:.02em}
+  .sect{color:var(--hi);font-weight:700;margin:2rem 0 .6rem;letter-spacing:.05em}
+  p{margin:0 0 .8rem;max-width:80ch}
+  b{color:var(--hi);font-weight:400}
+  code{color:var(--hi)}
+  a{color:var(--link);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .hr{color:var(--faint);margin:1.4rem 0;overflow:hidden;white-space:nowrap}
 
-  .root{font-size:.72rem;color:var(--dim);word-break:break-all;margin:0 0 1.2rem;border-left:2px solid var(--line2);padding-left:.8rem}
-  .root b{color:var(--cy);font-weight:400}
+  .statline{margin:.6rem 0 1.2rem;color:var(--ink)}
+  .statline .n{color:var(--hi)} .statline .n.ok{color:var(--ok)} .statline .n.run{color:var(--warn)}
+  .statline .l{color:var(--dim)}
+  .stat,.bar{display:inline}
+  .root{color:var(--dim);word-break:break-all;margin:0 0 1rem}
+  .root b{color:var(--ink)}
 
-  .recon{font-size:.8rem;color:var(--dim);border:1px solid var(--line2);padding:.7rem .9rem;margin-bottom:1.4rem;line-height:1.55;background:var(--bg2)}
-  .recon::before{content:"[TREE] ";color:var(--faint)}
-  .recon.ok{color:var(--ok);border-color:#164d26;background:#07130a}
-  .recon.bad{color:var(--bad);border-color:#5a1a14}
+  .recon{margin:0 0 1.2rem;color:var(--dim);max-width:84ch}
+  .recon::before{content:"tree: ";color:var(--faint)}
+  .recon.ok{color:var(--ok)}
+  .recon.bad{color:var(--bad)}
 
-  .panelb{border:1px solid var(--line2);background:var(--bg2);padding:.9rem 1.1rem;margin-bottom:1.4rem}
-  .panel-head2{font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--warn);margin-bottom:.5rem}
-  .panel-head2::before{content:"┌─ "}
-  .pbody{color:var(--dim);font-size:.8rem;margin-bottom:.9rem;max-width:52rem}
-  .chainrow{display:flex;gap:.8rem;flex-wrap:wrap;align-items:stretch;margin-bottom:.5rem}
-  .dropzone{flex:1;min-width:16rem;border:1px dashed var(--faint);color:var(--faint);
-    font-size:.75rem;display:flex;align-items:center;justify-content:center;padding:.55rem .9rem;transition:.15s}
-  .dropzone.hot{border-color:var(--ok);color:var(--ok);background:#07130a}
-  .cl{font-size:.75rem;padding:.22rem 0;line-height:1.5;color:var(--ink)}
-  .cl.ok::before{content:"[ ok ] ";color:var(--ok)}
-  .cl.bad{color:var(--bad)} .cl.bad::before{content:"[FAIL] "}
-  .cl.run{color:var(--dim)} .cl.run::before{content:"[ .. ] "}
-  .cl.done{color:var(--ok);margin-top:.35rem;text-shadow:0 0 8px rgba(51,255,102,.35)}
-  .cl.done::before{content:"[LOCK] "}
+  .panelb{margin:0 0 1.4rem}
+  .panel-head2{color:var(--hi);font-weight:700;margin-bottom:.4rem;letter-spacing:.05em;text-transform:uppercase;font-size:.92em}
+  .pbody{color:var(--dim);margin-bottom:.7rem;max-width:80ch}
+  .chainrow{display:flex;gap:1.2rem;flex-wrap:wrap;align-items:baseline;margin-bottom:.4rem}
+  .dropzone{color:var(--faint);border:1px dashed var(--faint);padding:.3rem .8rem;font-size:.95em}
+  .dropzone.hot{border-color:var(--ok);color:var(--ok)}
+  .cl{padding:.1rem 0;color:var(--ink);white-space:pre-wrap}
+  .cl.ok::before{content:"ok    ";color:var(--ok)}
+  .cl.bad{color:var(--bad)} .cl.bad::before{content:"FAIL  "}
+  .cl.run{color:var(--dim)} .cl.run::before{content:"..    "}
+  .cl.done{color:var(--ok);margin-top:.3rem} .cl.done::before{content:"done  "}
 
-  .actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-bottom:1.4rem}
-  button{font:inherit;font-size:.8rem;cursor:pointer;border-radius:0;
-    padding:.55rem 1.2rem;border:1px solid var(--line2);background:var(--bg2);color:var(--ink);
-    text-transform:uppercase;letter-spacing:.08em;transition:.12s}
-  button:hover:not(:disabled){border-color:var(--dim);color:var(--hi)}
-  button.primary{border-color:#1d7a3a;color:var(--ok)}
-  button.primary:hover:not(:disabled){background:#07130a;box-shadow:0 0 12px rgba(51,255,102,.15)}
-  button:disabled{opacity:.35;cursor:default}
-  button::before{content:"> "}
+  .actions{margin:0 0 1rem}
+  button{font:inherit;cursor:pointer;background:none;border:none;color:var(--link);padding:0;margin-right:1.6rem}
+  button::before{content:"["} button::after{content:"]"}
+  button:hover:not(:disabled){color:var(--hi)}
+  button:disabled{color:var(--faint);cursor:default}
+  button.primary{color:var(--ok)}
+  .rowbtn{margin:0}
 
-  table{width:100%;border-collapse:collapse;font-size:.78rem}
-  thead th{text-align:left;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;
-    color:var(--faint);font-weight:400;padding:.45rem .6rem;border-bottom:1px solid var(--line2)}
-  tbody td{padding:.55rem .6rem;border-bottom:1px solid var(--line);vertical-align:top}
-  tbody tr.main:hover{background:#081008}
+  .scroll{overflow-x:auto;margin:0 0 .5rem}
+  table{border-collapse:collapse;width:100%;font-size:inherit}
+  thead th{text-align:left;color:var(--faint);font-weight:400;padding:.15rem 1.2rem .35rem 0;border-bottom:1px solid var(--faint)}
+  tbody td{padding:.32rem 1.2rem .32rem 0;vertical-align:baseline}
+  tbody tr.main td{border-bottom:1px solid #141b14}
   .name{color:var(--hi)}
-  .name .h{display:block;font-size:.68rem;color:var(--faint)}
-  .kind{font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;
-    padding:.08rem .4rem;border:1px solid var(--line2);color:var(--dim)}
-  .kind.kernel{color:var(--cy);border-color:#155a6e}
-  .caps{display:flex;flex-wrap:wrap;gap:.25rem;max-width:22rem}
-  .cap{font-size:.62rem;color:var(--dim);background:#081008;border:1px solid var(--line);padding:.03rem .35rem;white-space:nowrap}
-  .meas{font-size:.7rem;color:var(--faint)}
-  .verdict{font-size:.74rem;white-space:nowrap}
-  .verdict.ok{color:var(--ok);text-shadow:0 0 6px rgba(51,255,102,.35)}
-  .verdict.ok::before{content:"[ok] "}
-  .verdict.bad{color:var(--bad)} .verdict.bad::before{content:"[FAIL] "}
+  .name .h{color:var(--faint);display:block;font-size:.92em}
+  .kind{color:var(--dim)} .kind.kernel{color:var(--warn)}
+  .caps{max-width:30ch;color:var(--dim);font-size:.92em;line-height:1.5}
+  .cap{white-space:nowrap} .cap::after{content:" "}
+  .meas{color:var(--faint);font-size:.95em}
+  .verdict{white-space:nowrap}
+  .verdict.ok{color:var(--ok)} .verdict.bad{color:var(--bad)}
   .verdict.run{color:var(--warn)} .verdict.idle{color:var(--faint)}
-  .rowbtn{font-size:.62rem;padding:.2rem .55rem}
-  .rowbtn::before{content:""}
 
   .drow td{padding:0;border:0}
-  .detail{display:grid;grid-template-columns:1fr 1fr;gap:1.6rem;padding:.4rem .8rem 1.2rem 1rem;
-    background:#060906;border-left:2px solid #1d7a3a;margin:0 0 .2rem}
-  @media(max-width:760px){.detail{grid-template-columns:1fr}}
-  .detail .col{min-width:0}
-  .ch{font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;color:var(--warn);margin:.8rem 0 .6rem}
-  .ch::before{content:"── "}
-  .pl{display:grid;grid-template-columns:3rem 11rem 1fr;gap:.6rem;align-items:baseline;padding:.18rem 0;
-    font-size:.72rem;border-bottom:1px solid #0b140b}
-  .pl .lv{color:var(--faint);font-size:.64rem}
-  .pl .sib{color:var(--ink)} .pl .dir{color:var(--dim);font-size:.68rem}
-  .fl{display:grid;grid-template-columns:4.2rem 1fr auto;gap:.5rem;align-items:baseline;padding:.14rem 0;font-size:.7rem}
-  .fl .lv{color:var(--faint);font-size:.62rem} .fl .dom{color:var(--faint);font-size:.64rem}
-  .kv{display:flex;justify-content:space-between;gap:1rem;padding:.18rem 0;font-size:.74rem;border-bottom:1px solid #0b140b}
-  .kv span:first-child{color:var(--dim)} .kv span:last-child{color:var(--ink)}
-  .done{margin-top:.8rem;color:var(--ok);font-size:.72rem;line-height:1.5}
-  .done::before{content:"[VERIFIED] ";color:var(--ok)}
+  .detail{padding:.5rem 0 .9rem 2ch;margin:0;color:var(--ink)}
+  .detail .col{margin-bottom:.6rem}
+  .ch{color:var(--dim);margin:.5rem 0 .3rem}
+  .ch::before{content:"# "}
+  .pl{display:grid;grid-template-columns:6ch 26ch 1fr;gap:1ch;padding:.06rem 0;font-size:.95em}
+  .pl .lv{color:var(--faint)} .pl .sib{color:var(--ink)} .pl .dir{color:var(--dim)}
+  .fl{display:grid;grid-template-columns:9ch 1fr auto;gap:1ch;padding:.04rem 0;font-size:.95em}
+  .fl .lv{color:var(--faint)} .fl .dom{color:var(--faint)}
+  .kv{display:flex;gap:1ch;padding:.06rem 0;font-size:.95em}
+  .kv span:first-child{color:var(--dim);min-width:26ch}
+  .kv span:last-child{color:var(--ink)}
+  .done{margin-top:.5rem;color:var(--ok);max-width:76ch}
 
-  .prose{margin-top:2.8rem;color:var(--dim);font-size:.8rem}
-  .prose h2{font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);font-weight:400;margin:1.8rem 0 .7rem}
-  .prose h2::before{content:"── ";color:var(--line2)}
-  .prose h2::after{content:" ──";color:var(--line2)}
-  .prose p{margin-bottom:.8rem;max-width:56rem}
-  .prose b{color:var(--ink);font-weight:400}
-  .prose code{background:#081008;border:1px solid var(--line);padding:.05em .35em;color:var(--hi);font-size:.92em}
-  .prose a{color:var(--cy);text-decoration:none;border-bottom:1px solid #155a6e}
-  .prose a:hover{color:var(--hi);border-color:var(--cy)}
-  .foot{margin-top:2.6rem;padding-top:1.2rem;border-top:1px solid var(--line2);color:var(--faint);
-    font-size:.72rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
-  .foot a{color:var(--dim);text-decoration:none}
-  .foot a:hover{color:var(--ok)}
-  .scroll{overflow-x:auto;border:1px solid var(--line2);background:var(--bg2)}
+  .prose{margin-top:2rem;color:var(--dim)}
+  .prose p{max-width:80ch}
+  .foot{margin-top:2.4rem;color:var(--faint);display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+  .foot a{color:var(--dim)}
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <div class="topline">╔══════════════════════════════════════════════════════════════════════════════╗</div>
-  <div class="eyebrow"><b>NONOS</b> :: ATTESTATION SURFACE :: transparent, post-quantum, no trusted setup <span class="blink">▌</span></div>
+  <div class="man"><span><b>NONOS-VERIFY(1)</b></span><span>NONOS Attestation Manual</span><span><b>NONOS-VERIFY(1)</b></span></div>
 
-  <h1>Don't trust the OS. Verify it.
-    <span class="soft">The kernel and 87 capsules, each carrying a STARK proof. Your browser checks all of it.</span></h1>
+  <div class="cmd">nonos-verify --surface --wasm</div>
+  <div class="out">loading the gate the kernel runs at spawn, compiled to wasm.
+every context below is rebuilt from what this page displays; a served
+file cannot bind anything you are not reading. nothing leaves this tab.</div>
 
-  <p class="lede">Every unit below is a real binary from the shipping image. Each carries a
-  proof of membership under a 32-byte policy root, bound to its <b>exact
-  capability grant</b>. The verifier is the same gate the kernel runs at every
-  spawn, compiled to WebAssembly. <b>Nothing is sent anywhere. No keyholder, no
-  enclave, no ceremony.</b></p>
-
-  <div class="bar">
-    <div class="stat"><div class="n" id="s-total">–</div><div class="l">attestations</div></div>
-    <div class="stat"><div class="n ok" id="s-ok">0</div><div class="l">verified here</div></div>
-    <div class="stat"><div class="n" id="s-ms">–</div><div class="l">median verify</div></div>
-    <div class="stat"><div class="n mono" id="s-params">32q · 32r</div><div class="l">queries · rounds</div></div>
+  <div class="statline">
+    <span class="n" id="s-total">-</span> <span class="l">attestations</span> ·
+    <span class="n ok" id="s-ok">0</span> <span class="l">verified here</span> ·
+    <span class="n" id="s-ms">-</span> <span class="l">median</span> ·
+    <span class="n" id="s-params">32q/32r</span> <span class="l">fri-queries/rounds</span>
   </div>
 
-  <div class="root">policy_root = <b id="root">loading</b><br>epoch <span id="epoch">–</span> · tree depth 8 · Poseidon/Goldilocks · FRI · 16 grind bits</div>
+  <div class="root">policy_root <b id="root">loading</b><br>epoch <span id="epoch">-</span> · depth 8 · poseidon/goldilocks · fri · 16 grind bits · no trusted setup</div>
 
-  <div class="recon" id="recon">refolding the tree…</div>
+  <div class="recon" id="recon">refolding both trees from the complete leaf sets…</div>
+
+  <div class="hr">────────────────────────────────────────────────────────────────────────────────────────</div>
 
   <div class="panelb">
-    <div class="panel-head2">boot chain :: from the artifacts themselves</div>
-    <p class="pbody">Zero served fixtures on the trust path. The shipping kernel image carries
-    its proof in a NONOSIMG footer; the bootloader binary carries the root it
-    enforces. Your browser parses the footer, measures the 90 MiB body,
-    extracts the root from inside the EFI, and closes the chain. Drop your own
-    downloaded copies, or run it on the bundled ones.</p>
+    <div class="panel-head2">boot chain, from the artifacts themselves</div>
+    <p class="pbody">the shipping kernel image carries its proof in a NONOSIMG footer; the
+bootloader binary carries the root it enforces. this page parses the
+footer, measures the 90 MiB body in wasm, extracts the root from inside
+the efi, and closes the chain. no fixture stands on the trust path.</p>
     <div class="chainrow">
-      <button id="chain-default">verify the shipping artifacts</button>
-      <div id="dropzone" class="dropzone">⇩ drop kernel_attested.bin + nonos_boot.efi</div>
+      <button id="chain-default">verify shipping artifacts</button>
+      <div id="dropzone" class="dropzone">drop kernel_attested.bin + nonos_boot.efi</div>
     </div>
     <div id="chain-log"></div>
   </div>
 
+  <div class="hr">────────────────────────────────────────────────────────────────────────────────────────</div>
+
   <div class="actions">
-    <button class="primary" id="verify-all" disabled>verify the entire system</button>
+    <button class="primary" id="verify-all" disabled>verify entire system</button>
     <button id="reset" disabled>reset</button>
   </div>
 
   <div class="scroll">
   <table>
     <thead><tr>
-      <th>unit</th><th>kind</th><th>capabilities</th><th>measurement</th><th>proof</th><th>status</th><th></th>
+      <th>unit</th><th>kind</th><th>capabilities bound in proof</th><th>blake3</th><th>proof</th><th>status</th><th></th>
     </tr></thead>
     <tbody id="rows"></tbody>
   </table>
   </div>
 
   <div class="prose">
-    <h2>what a green verdict proves</h2>
-    <p>The wasm is not a demo. It is the same <code>verify_attestation_trailer</code>
-    the kernel runs before it spawns a capsule and the bootloader runs before
-    the jump, built from <a href="https://github.com/NON-OS/stark-attest">NON-OS/stark-attest</a>.
-    Contexts are rebuilt from the values on this screen, so what verifies is
-    exactly what you read: the measurement, the capability mask, the epoch. A
-    served file cannot bind anything else.</p>
-    <p>It does not prove the binary you run is this one. That link is the
-    BLAKE3 measurement, which you reproduce with <code>b3sum</code> against a
-    release. A capability shown is one the proof itself binds, not a claim in
-    a config file.</p>
-    <h2>the parameters</h2>
-    <p>Width-8 Poseidon, 32 rounds, x^7 S-box. FRI: 32 queries, 16 grinding
-    bits, blowup 4 bits. Depth-8 policy tree. Round constants derived from a
-    public rule and re-derived in CI every push; the diffusion matrix is MDS
-    by theorem, not by search. Soundness published under both the provable
-    floor and the conjectured model. No elliptic curves anywhere, so the whole
-    construction is post-quantum by birth, not by patch.</p>
+    <div class="sect">WHAT A VERDICT PROVES</div>
+    <p>ok means: this trailer is a valid STARK membership proof under the root
+above, bound to exactly the measurement, capability mask and epoch shown
+on its row, at the parameters compiled into the verifier. the wasm is the
+deployment's own <code>verify_attestation_trailer</code>, built from
+<a href="https://github.com/NON-OS/stark-attest">NON-OS/stark-attest</a>, reproducible bit for bit.</p>
+    <p>it does not prove the binary you run is this one. that link is the
+blake3 column, checked with <code>b3sum</code> against a release. a capability
+listed here is one the proof itself binds, not a line in a config file.</p>
+
+    <div class="sect">PARAMETERS</div>
+    <p>width-8 poseidon, 32 rounds, x^7 s-box. round constants are blake3 of a
+public string, re-derived in CI on every push; the mds matrix is cauchy,
+mds by theorem. fri at 32 queries, 16 grinding bits, blowup 4. soundness
+published under the provable floor and the conjectured model, side by
+side. no elliptic curves; post-quantum by construction.</p>
   </div>
 
   <div class="foot">
-    <span>NONOS · AGPL-3.0-or-later · proof or it doesn't boot</span>
+    <span>nonos · agpl-3.0-or-later</span>
     <span><a href="https://github.com/NON-OS/stark-attest">github.com/NON-OS/stark-attest</a></span>
   </div>
 
