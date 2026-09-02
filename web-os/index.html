@@ -3,126 +3,150 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NONOS attestation surface</title>
+<title>NONOS :: attestation surface</title>
 <style>
   :root {
-    --bg:#08090b; --panel:#0c0e11; --line:#191d23; --line2:#232830;
-    --ink:#e9edf2; --dim:#79828d; --faint:#4b535d;
-    --ok:#49c17e; --bad:#f0655a; --wait:#c9a341; --accent:#cbd3dc;
+    --bg:#050705; --bg2:#070a07; --line:#0f1a0f; --line2:#1a2e1a;
+    --ink:#b8e6b8; --hi:#e8ffe8; --dim:#5a8a5a; --faint:#2e4e2e;
+    --ok:#33ff66; --bad:#ff4433; --warn:#ffcc33; --cy:#33ddff;
   }
   *{margin:0;padding:0;box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
   body{
     background:var(--bg);color:var(--ink);
-    font-family:ui-sans-serif,-apple-system,"Inter","Segoe UI",Helvetica,Arial,sans-serif;
-    font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;
-    padding:clamp(1.5rem,5vh,4rem) 1.25rem 6rem;
+    font-family:ui-monospace,"SF Mono","JetBrains Mono","Fira Code",Menlo,Consolas,monospace;
+    font-size:14px;line-height:1.6;
+    padding:clamp(1.2rem,4vh,3rem) 1rem 5rem;
   }
-  .wrap{max-width:60rem;margin:0 auto}
-  .mono{font-family:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace}
-
-  .eyebrow{font-family:ui-monospace,monospace;font-size:.7rem;letter-spacing:.24em;
-    text-transform:uppercase;color:var(--dim);margin-bottom:2rem;display:flex;gap:.75rem;align-items:center}
-  .eyebrow::after{content:"";flex:1;height:1px;background:var(--line)}
-
-  h1{font-size:clamp(1.8rem,4.6vw,2.7rem);line-height:1.1;font-weight:600;letter-spacing:-.02em;margin-bottom:1.1rem}
-  h1 .soft{color:var(--faint)}
-  .lede{color:var(--dim);max-width:44rem;font-size:1.02rem}
-  .lede b{color:var(--accent);font-weight:500}
-
-  .bar{
-    display:flex;flex-wrap:wrap;gap:1px;background:var(--line);border:1px solid var(--line);
-    border-radius:10px;overflow:hidden;margin:2.2rem 0 1.3rem;
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:9;
+    background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(0,0,0,.12) 2px 4px);
   }
-  .stat{background:var(--panel);padding:.9rem 1.15rem;flex:1;min-width:8.5rem}
-  .stat .n{font-family:ui-monospace,monospace;font-size:1.35rem;color:var(--ink);line-height:1.2}
-  .stat .n.ok{color:var(--ok)} .stat .n.run{color:var(--wait)}
-  .stat .l{font-size:.72rem;color:var(--dim);text-transform:uppercase;letter-spacing:.12em;margin-top:.15rem}
+  .wrap{max-width:62rem;margin:0 auto;position:relative;z-index:1}
+  .mono{font-family:inherit}
 
-  .root{font-family:ui-monospace,monospace;font-size:.78rem;color:var(--dim);
-    word-break:break-all;margin:.2rem 0 1.6rem}
-  .root b{color:var(--accent);font-weight:500}
+  .topline{color:var(--faint);font-size:.75rem;letter-spacing:.08em;white-space:pre;overflow-x:auto;margin-bottom:.4rem}
+  .eyebrow{color:var(--dim);font-size:.75rem;letter-spacing:.25em;margin-bottom:1.6rem}
+  .eyebrow b{color:var(--ok);font-weight:400}
+  .eyebrow .blink{animation:bl 1.1s steps(1) infinite;color:var(--ok)}
+  @keyframes bl{50%{opacity:0}}
 
-  .actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-bottom:1.8rem}
-  button{font:inherit;font-size:.9rem;font-weight:500;cursor:pointer;border-radius:8px;
-    padding:.65rem 1.35rem;border:1px solid var(--line2);background:#12151a;color:var(--ink);transition:.15s}
-  button:hover:not(:disabled){border-color:#333b45;background:#171b21}
-  button.primary{border-color:rgba(73,193,126,.4);background:rgba(73,193,126,.09);color:var(--ok)}
-  button.primary:hover:not(:disabled){background:rgba(73,193,126,.15)}
-  button:disabled{opacity:.4;cursor:default}
+  h1{font-size:clamp(1.3rem,3.6vw,2rem);font-weight:700;line-height:1.25;
+     color:var(--hi);letter-spacing:.01em;margin-bottom:1rem;text-transform:uppercase}
+  h1 .soft{color:var(--dim);display:block;font-size:.72em;font-weight:400;text-transform:none}
+  .lede{color:var(--dim);max-width:52rem;font-size:.86rem;margin-bottom:1.8rem}
+  .lede b{color:var(--ink);font-weight:400}
 
-  table{width:100%;border-collapse:collapse;font-size:.86rem}
-  thead th{text-align:left;font-family:ui-monospace,monospace;font-size:.68rem;letter-spacing:.14em;
-    text-transform:uppercase;color:var(--faint);font-weight:500;padding:.5rem .7rem;border-bottom:1px solid var(--line)}
-  tbody td{padding:.7rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
-  tbody tr:hover{background:#0d0f13}
-  .name{font-weight:500}
-  .name .h{display:block;font-size:.76rem;color:var(--dim);font-weight:400}
-  .kind{font-family:ui-monospace,monospace;font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;
-    padding:.12rem .45rem;border-radius:4px;border:1px solid var(--line2);color:var(--dim)}
-  .kind.kernel{color:var(--accent);border-color:#39414c}
-  .caps{display:flex;flex-wrap:wrap;gap:.28rem;max-width:22rem}
-  .cap{font-family:ui-monospace,monospace;font-size:.68rem;color:var(--dim);
-    background:#101318;border:1px solid var(--line);border-radius:4px;padding:.06rem .38rem;white-space:nowrap}
-  .meas{font-family:ui-monospace,monospace;font-size:.74rem;color:var(--faint)}
-  .verdict{font-family:ui-monospace,monospace;font-size:.78rem;white-space:nowrap}
-  .verdict.ok{color:var(--ok)} .verdict.bad{color:var(--bad)} .verdict.run{color:var(--wait)} .verdict.idle{color:var(--faint)}
-  .rowbtn{font-size:.72rem;padding:.28rem .7rem;border-radius:6px}
+  .bar{display:flex;flex-wrap:wrap;border:1px solid var(--line2);margin:0 0 1rem;background:var(--bg2)}
+  .stat{padding:.7rem 1.1rem;flex:1;min-width:8rem;border-right:1px solid var(--line)}
+  .stat:last-child{border-right:0}
+  .stat .n{font-size:1.3rem;color:var(--hi);line-height:1.2}
+  .stat .n.ok{color:var(--ok);text-shadow:0 0 8px rgba(51,255,102,.4)}
+  .stat .n.run{color:var(--warn)}
+  .stat .l{font-size:.65rem;color:var(--dim);text-transform:uppercase;letter-spacing:.18em;margin-top:.1rem}
 
-  .prose{margin-top:3.4rem;color:var(--dim);font-size:.92rem}
-  .prose h2{font-family:ui-monospace,monospace;font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;
-    color:var(--faint);font-weight:500;margin:2.2rem 0 .8rem}
-  .prose p{margin-bottom:.9rem}
-  .prose b{color:var(--accent);font-weight:500}
-  .prose code{font-size:.85em;background:#12151a;border:1px solid var(--line);border-radius:5px;padding:.08em .4em;color:var(--ink)}
-  .prose a{color:var(--ink);border-bottom:1px solid var(--faint);text-decoration:none}
-  .foot{margin-top:3rem;padding-top:1.4rem;border-top:1px solid var(--line);color:var(--faint);
-    font-size:.8rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
-  .foot a{color:var(--dim);text-decoration:none}
-  .recon{font-size:.85rem;color:var(--dim);border:1px solid var(--line);border-radius:8px;padding:.75rem 1rem;margin-bottom:1.6rem;line-height:1.55}
-  .recon.ok{color:var(--ok);border-color:rgba(73,193,126,.3);background:rgba(73,193,126,.05)}
-  .recon.bad{color:var(--bad);border-color:rgba(240,101,90,.4)}
-  .panelb{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:1.1rem 1.3rem;margin-bottom:1.8rem}
-  .panel-head2{font-family:ui-monospace,monospace;font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--wait);margin-bottom:.6rem}
-  .pbody{color:var(--dim);font-size:.88rem;margin-bottom:1rem;max-width:46rem}
-  .chainrow{display:flex;gap:.9rem;flex-wrap:wrap;align-items:stretch;margin-bottom:.6rem}
-  .dropzone{flex:1;min-width:16rem;border:1px dashed var(--line2);border-radius:8px;color:var(--faint);
-    font-size:.82rem;display:flex;align-items:center;justify-content:center;padding:.6rem 1rem;transition:.15s}
-  .dropzone.hot{border-color:var(--ok);color:var(--ok);background:rgba(73,193,126,.05)}
-  .cl{font-family:ui-monospace,monospace;font-size:.78rem;padding:.28rem 0;line-height:1.5}
-  .cl.ok{color:var(--ink)} .cl.ok::before{content:"ok   ";color:var(--ok)}
-  .cl.bad{color:var(--bad)} .cl.run{color:var(--dim)}
-  .cl.done{color:var(--ok);margin-top:.4rem;font-weight:600}
-  .scroll{overflow-x:auto}
-  .dimc{color:var(--faint)}
+  .root{font-size:.72rem;color:var(--dim);word-break:break-all;margin:0 0 1.2rem;border-left:2px solid var(--line2);padding-left:.8rem}
+  .root b{color:var(--cy);font-weight:400}
+
+  .recon{font-size:.8rem;color:var(--dim);border:1px solid var(--line2);padding:.7rem .9rem;margin-bottom:1.4rem;line-height:1.55;background:var(--bg2)}
+  .recon::before{content:"[TREE] ";color:var(--faint)}
+  .recon.ok{color:var(--ok);border-color:#164d26;background:#07130a}
+  .recon.bad{color:var(--bad);border-color:#5a1a14}
+
+  .panelb{border:1px solid var(--line2);background:var(--bg2);padding:.9rem 1.1rem;margin-bottom:1.4rem}
+  .panel-head2{font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--warn);margin-bottom:.5rem}
+  .panel-head2::before{content:"┌─ "}
+  .pbody{color:var(--dim);font-size:.8rem;margin-bottom:.9rem;max-width:52rem}
+  .chainrow{display:flex;gap:.8rem;flex-wrap:wrap;align-items:stretch;margin-bottom:.5rem}
+  .dropzone{flex:1;min-width:16rem;border:1px dashed var(--faint);color:var(--faint);
+    font-size:.75rem;display:flex;align-items:center;justify-content:center;padding:.55rem .9rem;transition:.15s}
+  .dropzone.hot{border-color:var(--ok);color:var(--ok);background:#07130a}
+  .cl{font-size:.75rem;padding:.22rem 0;line-height:1.5;color:var(--ink)}
+  .cl.ok::before{content:"[ ok ] ";color:var(--ok)}
+  .cl.bad{color:var(--bad)} .cl.bad::before{content:"[FAIL] "}
+  .cl.run{color:var(--dim)} .cl.run::before{content:"[ .. ] "}
+  .cl.done{color:var(--ok);margin-top:.35rem;text-shadow:0 0 8px rgba(51,255,102,.35)}
+  .cl.done::before{content:"[LOCK] "}
+
+  .actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-bottom:1.4rem}
+  button{font:inherit;font-size:.8rem;cursor:pointer;border-radius:0;
+    padding:.55rem 1.2rem;border:1px solid var(--line2);background:var(--bg2);color:var(--ink);
+    text-transform:uppercase;letter-spacing:.08em;transition:.12s}
+  button:hover:not(:disabled){border-color:var(--dim);color:var(--hi)}
+  button.primary{border-color:#1d7a3a;color:var(--ok)}
+  button.primary:hover:not(:disabled){background:#07130a;box-shadow:0 0 12px rgba(51,255,102,.15)}
+  button:disabled{opacity:.35;cursor:default}
+  button::before{content:"> "}
+
+  table{width:100%;border-collapse:collapse;font-size:.78rem}
+  thead th{text-align:left;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--faint);font-weight:400;padding:.45rem .6rem;border-bottom:1px solid var(--line2)}
+  tbody td{padding:.55rem .6rem;border-bottom:1px solid var(--line);vertical-align:top}
+  tbody tr.main:hover{background:#081008}
+  .name{color:var(--hi)}
+  .name .h{display:block;font-size:.68rem;color:var(--faint)}
+  .kind{font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;
+    padding:.08rem .4rem;border:1px solid var(--line2);color:var(--dim)}
+  .kind.kernel{color:var(--cy);border-color:#155a6e}
+  .caps{display:flex;flex-wrap:wrap;gap:.25rem;max-width:22rem}
+  .cap{font-size:.62rem;color:var(--dim);background:#081008;border:1px solid var(--line);padding:.03rem .35rem;white-space:nowrap}
+  .meas{font-size:.7rem;color:var(--faint)}
+  .verdict{font-size:.74rem;white-space:nowrap}
+  .verdict.ok{color:var(--ok);text-shadow:0 0 6px rgba(51,255,102,.35)}
+  .verdict.ok::before{content:"[ok] "}
+  .verdict.bad{color:var(--bad)} .verdict.bad::before{content:"[FAIL] "}
+  .verdict.run{color:var(--warn)} .verdict.idle{color:var(--faint)}
+  .rowbtn{font-size:.62rem;padding:.2rem .55rem}
+  .rowbtn::before{content:""}
+
   .drow td{padding:0;border:0}
-  .detail{display:grid;grid-template-columns:1fr 1fr;gap:2rem;padding:.3rem .7rem 1.4rem 1rem;
-    background:#0a0c0f;border-left:2px solid var(--line2);margin:0 0 .2rem}
+  .detail{display:grid;grid-template-columns:1fr 1fr;gap:1.6rem;padding:.4rem .8rem 1.2rem 1rem;
+    background:#060906;border-left:2px solid #1d7a3a;margin:0 0 .2rem}
+  @media(max-width:760px){.detail{grid-template-columns:1fr}}
   .detail .col{min-width:0}
-  .ch{font-family:ui-monospace,monospace;font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;
-    color:var(--wait);margin:.9rem 0 .7rem}
-  .pl{display:grid;grid-template-columns:3rem 12rem 1fr;gap:.6rem;align-items:baseline;padding:.22rem 0;
-    font-size:.76rem;border-bottom:1px solid #14171c}
-  .pl .lv{font-family:ui-monospace,monospace;color:var(--faint);font-size:.68rem}
-  .pl .sib{color:var(--ink)} .pl .dir{color:var(--dim);font-size:.72rem}
-  .fl{display:grid;grid-template-columns:4.5rem 1fr auto;gap:.5rem;align-items:baseline;padding:.16rem 0;font-size:.74rem}
-  .fl .lv{font-family:ui-monospace,monospace;color:var(--faint);font-size:.66rem} .fl .dom{color:var(--faint);font-size:.68rem}
-  .kv{display:flex;justify-content:space-between;gap:1rem;padding:.22rem 0;font-size:.78rem;border-bottom:1px solid #14171c}
+  .ch{font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;color:var(--warn);margin:.8rem 0 .6rem}
+  .ch::before{content:"── "}
+  .pl{display:grid;grid-template-columns:3rem 11rem 1fr;gap:.6rem;align-items:baseline;padding:.18rem 0;
+    font-size:.72rem;border-bottom:1px solid #0b140b}
+  .pl .lv{color:var(--faint);font-size:.64rem}
+  .pl .sib{color:var(--ink)} .pl .dir{color:var(--dim);font-size:.68rem}
+  .fl{display:grid;grid-template-columns:4.2rem 1fr auto;gap:.5rem;align-items:baseline;padding:.14rem 0;font-size:.7rem}
+  .fl .lv{color:var(--faint);font-size:.62rem} .fl .dom{color:var(--faint);font-size:.64rem}
+  .kv{display:flex;justify-content:space-between;gap:1rem;padding:.18rem 0;font-size:.74rem;border-bottom:1px solid #0b140b}
   .kv span:first-child{color:var(--dim)} .kv span:last-child{color:var(--ink)}
-  .done{margin-top:.9rem;color:var(--ok);font-size:.76rem;line-height:1.5}
+  .done{margin-top:.8rem;color:var(--ok);font-size:.72rem;line-height:1.5}
+  .done::before{content:"[VERIFIED] ";color:var(--ok)}
 
+  .prose{margin-top:2.8rem;color:var(--dim);font-size:.8rem}
+  .prose h2{font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);font-weight:400;margin:1.8rem 0 .7rem}
+  .prose h2::before{content:"── ";color:var(--line2)}
+  .prose h2::after{content:" ──";color:var(--line2)}
+  .prose p{margin-bottom:.8rem;max-width:56rem}
+  .prose b{color:var(--ink);font-weight:400}
+  .prose code{background:#081008;border:1px solid var(--line);padding:.05em .35em;color:var(--hi);font-size:.92em}
+  .prose a{color:var(--cy);text-decoration:none;border-bottom:1px solid #155a6e}
+  .prose a:hover{color:var(--hi);border-color:var(--cy)}
+  .foot{margin-top:2.6rem;padding-top:1.2rem;border-top:1px solid var(--line2);color:var(--faint);
+    font-size:.72rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+  .foot a{color:var(--dim);text-decoration:none}
+  .foot a:hover{color:var(--ok)}
+  .scroll{overflow-x:auto;border:1px solid var(--line2);background:var(--bg2)}
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <div class="eyebrow">NONOS &nbsp;·&nbsp; attestation surface</div>
+  <div class="topline">╔══════════════════════════════════════════════════════════════════════════════╗</div>
+  <div class="eyebrow"><b>NONOS</b> :: ATTESTATION SURFACE :: transparent, post-quantum, no trusted setup <span class="blink">▌</span></div>
 
-  <h1>The whole operating system,<br><span class="soft">proven, in your browser.</span></h1>
-  <p class="lede">The kernel and every enrolled capsule carry a transparent
-  post-quantum STARK proof of membership under one 32-byte policy root. This
-  page verifies all of them, one by one, using the same gate the kernel runs at
-  spawn, compiled to WebAssembly. <b>No trusted setup, nothing sent anywhere.</b>
-  Each proof binds the exact binary and the exact capabilities it was granted.</p>
+  <h1>Don't trust the OS. Verify it.
+    <span class="soft">The kernel and 87 capsules, each carrying a STARK proof. Your browser checks all of it.</span></h1>
+
+  <p class="lede">Every unit below is a real binary from the shipping image. Each carries a
+  proof of membership under a 32-byte policy root, bound to its <b>exact
+  capability grant</b>. The verifier is the same gate the kernel runs at every
+  spawn, compiled to WebAssembly. <b>Nothing is sent anywhere. No keyholder, no
+  enclave, no ceremony.</b></p>
 
   <div class="bar">
     <div class="stat"><div class="n" id="s-total">–</div><div class="l">attestations</div></div>
@@ -131,21 +155,20 @@
     <div class="stat"><div class="n mono" id="s-params">32q · 32r</div><div class="l">queries · rounds</div></div>
   </div>
 
-  <div class="root">policy root &nbsp;<b id="root">loading</b> &nbsp;·&nbsp; epoch <span id="epoch">–</span> &nbsp;·&nbsp; tree depth 8 &nbsp;·&nbsp; Poseidon over Goldilocks, FRI</div>
+  <div class="root">policy_root = <b id="root">loading</b><br>epoch <span id="epoch">–</span> · tree depth 8 · Poseidon/Goldilocks · FRI · 16 grind bits</div>
 
-  <div class="recon" id="recon">reconstructing the tree…</div>
+  <div class="recon" id="recon">refolding the tree…</div>
 
   <div class="panelb">
-    <div class="panel-head2">boot chain, from the artifacts themselves</div>
-    <p class="pbody">The strongest form of this page: no fixture files on the
-    trust path at all. The shipping kernel image carries its proof in a
-    NONOSIMG footer; the bootloader binary carries the root it enforces. Drop
-    your own downloaded copies below, or run it on the bundled ones, and your
-    browser parses the footer, measures the 90 MiB body, extracts the root
-    from the bootloader, and closes the chain.</p>
+    <div class="panel-head2">boot chain :: from the artifacts themselves</div>
+    <p class="pbody">Zero served fixtures on the trust path. The shipping kernel image carries
+    its proof in a NONOSIMG footer; the bootloader binary carries the root it
+    enforces. Your browser parses the footer, measures the 90 MiB body,
+    extracts the root from inside the EFI, and closes the chain. Drop your own
+    downloaded copies, or run it on the bundled ones.</p>
     <div class="chainrow">
-      <button id="chain-default">verify the bundled shipping artifacts</button>
-      <div id="dropzone" class="dropzone">or drop kernel_attested.bin and nonos_boot.efi here</div>
+      <button id="chain-default">verify the shipping artifacts</button>
+      <div id="dropzone" class="dropzone">⇩ drop kernel_attested.bin + nonos_boot.efi</div>
     </div>
     <div id="chain-log"></div>
   </div>
@@ -165,34 +188,32 @@
   </div>
 
   <div class="prose">
-    <h2>what this verifies</h2>
-    <p>Each row is a STARK proof that a specific binary, identified by its BLAKE3
-    measurement, is an enrolled member of the set the policy root commits to,
-    bound to the exact capability mask that binary was granted. The verifier is
-    the same <code>verify_attestation_trailer</code> the kernel runs before it
-    spawns a capsule and the bootloader runs before it jumps to the kernel,
-    compiled to 90 KB of WebAssembly from
-    <a href="https://github.com/NON-OS/stark-attest">NON-OS/stark-attest</a>.</p>
-    <p>Verifying here proves the proof is valid under this root for these
-    capabilities. It does not prove the binary you run is this one; that link is
-    the measurement, which you reproduce with <code>b3sum</code> against the
-    image. A capability shown as granted is one the proof itself binds, not a
-    claim in a config file.</p>
+    <h2>what a green verdict proves</h2>
+    <p>The wasm is not a demo. It is the same <code>verify_attestation_trailer</code>
+    the kernel runs before it spawns a capsule and the bootloader runs before
+    the jump, built from <a href="https://github.com/NON-OS/stark-attest">NON-OS/stark-attest</a>.
+    Contexts are rebuilt from the values on this screen, so what verifies is
+    exactly what you read: the measurement, the capability mask, the epoch. A
+    served file cannot bind anything else.</p>
+    <p>It does not prove the binary you run is this one. That link is the
+    BLAKE3 measurement, which you reproduce with <code>b3sum</code> against a
+    release. A capability shown is one the proof itself binds, not a claim in
+    a config file.</p>
     <h2>the parameters</h2>
-    <p>Width-8 Poseidon, 32 rounds, x^7 S-box; FRI with 32 queries, 16 grinding
-    bits, blowup of 4 bits; a depth-8 policy tree. Constants derived from a
-    public rule and re-checked in CI, soundness published under both the
-    provable and the conjectured model. No elliptic curves, so the whole thing
-    is post-quantum by construction.</p>
+    <p>Width-8 Poseidon, 32 rounds, x^7 S-box. FRI: 32 queries, 16 grinding
+    bits, blowup 4 bits. Depth-8 policy tree. Round constants derived from a
+    public rule and re-derived in CI every push; the diffusion matrix is MDS
+    by theorem, not by search. Soundness published under both the provable
+    floor and the conjectured model. No elliptic curves anywhere, so the whole
+    construction is post-quantum by birth, not by patch.</p>
   </div>
 
   <div class="foot">
-    <span>NONOS &nbsp;·&nbsp; AGPL-3.0-or-later</span>
+    <span>NONOS · AGPL-3.0-or-later · proof or it doesn't boot</span>
     <span><a href="https://github.com/NON-OS/stark-attest">github.com/NON-OS/stark-attest</a></span>
   </div>
 
 </div>
-
 <script src="app.js"></script>
 </body>
 </html>
