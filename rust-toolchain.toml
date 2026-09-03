@@ -1,0 +1,9 @@
+# The toolchain every proof in this repository is built and checked
+# with. CI installs whatever "stable" is on the runner unless a pin
+# says otherwise, and a prover whose behavior shifts under a silent
+# toolchain bump is a prover whose measurements need re-baselining
+# without anyone knowing. Bumps to this file are deliberate commits
+# that rerun the digest gate.
+[toolchain]
+channel = "1.91.1"
+components = ["rustfmt", "clippy"]
