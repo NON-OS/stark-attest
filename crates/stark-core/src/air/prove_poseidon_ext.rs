@@ -24,7 +24,7 @@ use super::super::air::{Poseidon, RATE};
 use super::super::field::{Fp, Fp2};
 use super::super::fri::root_of_unity;
 use super::super::fri_poseidon_ext::fri_prove_poseidon_ext;
-use super::super::poly::{eval_cols_on_subgroup_ext, eval_ext, intt, lde};
+use super::super::poly::{eval_cols_on_subgroup_ext, intt, lde};
 use super::super::poseidon_merkle::{pack_base, pack_ext, PoseidonMerkleTree, PrunedPoseidonTree};
 use super::super::poseidon_transcript::PoseidonTranscript;
 use super::composition::{compose_ext, domain_params_blown, num_coeffs};
@@ -70,7 +70,7 @@ pub fn stark_prove_poseidon_ext_pub<A: AirExt>(
     let width = air.trace_width();
     let (log_n, fri_log_blowup) = domain_params_blown(air, extra_blowup_bits);
     let n = 1usize << log_n;
-    let blowup = 1usize << (log_n - log_t);
+    let _blowup = 1usize << (log_n - log_t);
     let window_size = air.window_size();
 
     let g = root_of_unity(log_t);

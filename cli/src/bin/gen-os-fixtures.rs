@@ -38,9 +38,9 @@ use std::env;
 use std::fs;
 
 use nonos_stark::air::{measure_capsule, verify_attestation_trailer, Poseidon, RATE};
-use nonos_stark::poseidon_merkle::PoseidonMerkleTree;
 use nonos_stark::attest_params::{LOG_ROUNDS, N_QUERIES};
 use nonos_stark::field::Fp;
+use nonos_stark::poseidon_merkle::PoseidonMerkleTree;
 
 fn root_from_bytes(b: &[u8]) -> [Fp; RATE] {
     let mut r = [Fp::ZERO; RATE];
@@ -140,14 +140,8 @@ fn main() {
         ctx.extend_from_slice(&meas);
         ctx.extend_from_slice(&caps.to_be_bytes());
         ctx.extend_from_slice(&epoch.to_be_bytes());
-        let ok = verify_attestation_trailer(
-            &hasher,
-            LOG_ROUNDS,
-            policy_root,
-            N_QUERIES,
-            &trailer,
-            &ctx,
-        );
+        let ok =
+            verify_attestation_trailer(&hasher, LOG_ROUNDS, policy_root, N_QUERIES, &trailer, &ctx);
         if ok {
             fs::write(format!("{out}/{slug}.trailer.bin"), &trailer).unwrap();
             fs::write(format!("{out}/{slug}.context.bin"), &ctx).unwrap();
@@ -189,7 +183,10 @@ fn main() {
     fs::write(format!("{out}/index.json"), &index).unwrap();
 
     println!("\n{verified} attestations verified and written, {refused} refused");
-    assert_eq!(refused, 0, "some attestation refused; the fixture would ship an unverifiable proof");
+    assert_eq!(
+        refused, 0,
+        "some attestation refused; the fixture would ship an unverifiable proof"
+    );
 
     // Reconstruct both roots from the binaries alone. This is the set
     // transparency guarantee the page will hand to the browser: the policy

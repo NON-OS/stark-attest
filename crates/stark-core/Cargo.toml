@@ -2,7 +2,8 @@
 name = "nonos-stark"
 version = "0.2.0"
 edition = "2021"
-license = "AGPL-3.0"
+license = "AGPL-3.0-or-later"
+publish = false
 description = "Transparent post-quantum STARK primitives shared by the kernel and the bootloader"
 
 [lib]
