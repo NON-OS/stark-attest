@@ -29,11 +29,8 @@ use std::process::exit;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::thread;
 
-use nonos_stark::air::{
-    build_attestation_trailer_from_set, deserialize_proof_ext, stark_verify_ext_blown_bound,
-    MeasuredSet, MerkleMembership, Poseidon, RATE,
-};
-use nonos_stark::attest_params::{EXTRA_BLOWUP_BITS, GRIND_BITS, LOG_ROUNDS, N_QUERIES};
+use nonos_stark::air::{build_public_trailer, verify_public_trailer, MeasuredSet, Poseidon, RATE};
+use nonos_stark::attest_params::LOG_ROUNDS;
 use nonos_stark::field::Fp;
 
 /// Fixed tree depth: up to 256 members per set. A parameterized depth is the
@@ -41,7 +38,6 @@ use nonos_stark::field::Fp;
 /// trailers stay verifiable when it lands.
 const TREE_DEPTH: usize = 8;
 const LEAVES: usize = 1 << TREE_DEPTH;
-const MAGIC: &[u8; 8] = b"NZKSTRK1";
 
 /// Padding for unused slots. Begins with a byte no ELF, archive, or text file
 /// starts with a domain tag after, so no real artifact measures to a pad leaf.
@@ -52,16 +48,6 @@ fn context_for(file_bytes: &[u8], caller_ctx: &[u8]) -> Vec<u8> {
     ctx.extend_from_slice(blake3::hash(file_bytes).as_bytes());
     ctx.extend_from_slice(caller_ctx);
     ctx
-}
-
-fn to_rate(bytes: &[u8]) -> [Fp; RATE] {
-    let mut out = [Fp::ZERO; RATE];
-    for (i, lane) in out.iter_mut().enumerate() {
-        let mut w = [0u8; 8];
-        w.copy_from_slice(&bytes[i * 8..i * 8 + 8]);
-        *lane = Fp::from_u64(u64::from_le_bytes(w));
-    }
-    out
 }
 
 fn root_to_bytes(root: [Fp; RATE]) -> [u8; 32] {
@@ -83,33 +69,11 @@ fn padded<'a>(images: &[&'a [u8]]) -> Vec<&'a [u8]> {
 
 /// The exact parse-and-verify a consumer runs. Kept byte-compatible with the
 /// NONOS spawn gate so a trailer made by either tool verifies in both worlds.
-fn gate_verify(root_bytes: &[u8; 32], trailer: &[u8], context: &[u8]) -> bool {
-    let dir_bytes = TREE_DEPTH.div_ceil(8);
-    let sib_end = 9 + TREE_DEPTH * 32;
-    if trailer.len() < sib_end + dir_bytes
-        || &trailer[0..8] != MAGIC
-        || trailer[8] as usize != TREE_DEPTH
-    {
-        return false;
-    }
-    let mut siblings = Vec::with_capacity(TREE_DEPTH);
-    for i in 0..TREE_DEPTH {
-        siblings.push(to_rate(&trailer[9 + i * 32..9 + i * 32 + 32]));
-    }
-    let dirs = &trailer[sib_end..sib_end + dir_bytes];
-    let directions: Vec<bool> =
-        (0..TREE_DEPTH).map(|i| (dirs[i / 8] >> (i % 8)) & 1 == 1).collect();
-    let Some(proof) = deserialize_proof_ext(&trailer[sib_end + dir_bytes..]) else {
-        return false;
-    };
-    let air = MerkleMembership::new(
-        Poseidon::new(LOG_ROUNDS, [Fp::ZERO; RATE]),
-        LOG_ROUNDS,
-        to_rate(root_bytes),
-        siblings,
-        directions,
-    );
-    stark_verify_ext_blown_bound(&air, &proof, N_QUERIES, GRIND_BITS, EXTRA_BLOWUP_BITS, context)
+/// The one gate every attested image passes, measuring `image` itself: the
+/// same crate function the NØNOS kernel runs, so a trailer this tool accepts
+/// is one the kernel accepts.
+fn gate_verify(root_bytes: &[u8; 32], image: &[u8], trailer: &[u8], context: &[u8]) -> bool {
+    verify_public_trailer(root_bytes, TREE_DEPTH, image, trailer, context)
 }
 
 struct Spec {
@@ -145,7 +109,8 @@ fn enroll(root_out: &str, specs: &[Spec]) {
     let contexts: Vec<Vec<u8>> =
         images.iter().zip(specs).map(|(img, s)| context_for(img, &s.ctx)).collect();
     let refs: Vec<&[u8]> = images.iter().map(Vec::as_slice).collect();
-    let set = MeasuredSet::commit(&hasher, &padded(&refs));
+    let padded = padded(&refs);
+    let set = MeasuredSet::commit_hybrid(&hasher, &padded);
     let root = root_to_bytes(set.root());
 
     let n = specs.len();
@@ -161,17 +126,11 @@ fn enroll(root_out: &str, specs: &[Spec]) {
                         if i >= n {
                             break;
                         }
-                        let trailer = build_attestation_trailer_from_set(
-                            &hasher,
-                            LOG_ROUNDS,
-                            &set,
-                            i,
-                            &contexts[i],
-                            N_QUERIES,
-                            GRIND_BITS,
-                            EXTRA_BLOWUP_BITS,
-                        );
-                        if !gate_verify(&root, &trailer, &contexts[i]) {
+                        let Some(trailer) = build_public_trailer(&set, i, &contexts[i]) else {
+                            eprintln!("enroll: slot {i} is outside the tree");
+                            exit(2);
+                        };
+                        if !gate_verify(&root, padded[i], &trailer, &contexts[i]) {
                             eprintln!("enroll: trailer {i} failed the gate self-check");
                             exit(2);
                         }
@@ -206,7 +165,7 @@ fn verify(root_path: &str, specs: &[Spec]) {
         let image = read(&s.path);
         let trailer = read(&s.trailer);
         let ctx = context_for(&image, &s.ctx);
-        if gate_verify(&root, &trailer, &ctx) {
+        if gate_verify(&root, &image, &trailer, &ctx) {
             println!("  ok    {}", s.path);
         } else {
             println!("  FAIL  {}", s.path);
@@ -248,7 +207,7 @@ fn selftest() {
     r.copy_from_slice(&root);
     let img = read(&specs[0].path);
     let ctx = context_for(&img, &specs[0].ctx);
-    if gate_verify(&r, &read(&specs[0].trailer), &ctx) {
+    if gate_verify(&r, &img, &read(&specs[0].trailer), &ctx) {
         eprintln!("selftest: tampered artifact verified; refusing to exist");
         exit(2);
     }
@@ -256,7 +215,7 @@ fn selftest() {
     fs::write(&a, b"artifact-a-content").unwrap();
     let img = read(&specs[0].path);
     let bad_ctx = context_for(&img, &[0xAB]);
-    if gate_verify(&r, &read(&specs[0].trailer), &bad_ctx) {
+    if gate_verify(&r, &img, &read(&specs[0].trailer), &bad_ctx) {
         eprintln!("selftest: tampered context verified; refusing to exist");
         exit(2);
     }

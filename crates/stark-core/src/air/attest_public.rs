@@ -20,12 +20,9 @@
 //! The private-leaf form proved only that some enrolled leaf exists, which any
 //! enrolled image's public path satisfies for a context the prover chooses.
 
-use super::measure::measure_capsule_hybrid;
-use super::poseidon::{Poseidon, RATE};
-use super::{deserialize_proof_ext, stark_verify_ext_blown_bound, MultiMembership, Opening};
-use crate::attest_params::{EXTRA_BLOWUP_BITS, GRIND_BITS, LOG_ROUNDS, N_QUERIES};
+pub use super::attest_public_digest::verify_public_trailer_digest;
+use super::poseidon::RATE;
 use crate::field::Fp;
-use alloc::vec::Vec;
 
 /// A new magic, so a private-leaf trailer is refused rather than reinterpreted.
 pub const PUBLIC_TRAILER_MAGIC: &[u8; 8] = b"NZKSTRK2";
@@ -51,25 +48,5 @@ pub fn verify_public_trailer(
     trailer: &[u8],
     context: &[u8],
 ) -> bool {
-    let dir_bytes = depth.div_ceil(8);
-    let sib_end = 9 + depth * 32;
-    if depth == 0
-        || trailer.len() < sib_end + dir_bytes
-        || &trailer[0..8] != PUBLIC_TRAILER_MAGIC
-        || trailer[8] as usize != depth
-    {
-        return false;
-    }
-    let siblings: Vec<[Fp; RATE]> = trailer[9..sib_end].chunks_exact(32).map(to_rate).collect();
-    let dirs = &trailer[sib_end..sib_end + dir_bytes];
-    let directions: Vec<bool> = (0..depth).map(|i| (dirs[i / 8] >> (i % 8)) & 1 == 1).collect();
-    let Some(proof) = deserialize_proof_ext(&trailer[sib_end + dir_bytes..]) else {
-        return false;
-    };
-    let hasher = Poseidon::new(LOG_ROUNDS, [Fp::ZERO; RATE]);
-    // The leaf comes from the bytes about to run, never from the trailer.
-    let leaf = measure_capsule_hybrid(&hasher, image);
-    let opening = Opening { leaf, root: to_rate(root), siblings, directions };
-    let air = MultiMembership::new(hasher, LOG_ROUNDS, alloc::vec![opening]);
-    stark_verify_ext_blown_bound(&air, &proof, N_QUERIES, GRIND_BITS, EXTRA_BLOWUP_BITS, context)
+    verify_public_trailer_digest(root, depth, blake3::hash(image).as_bytes(), trailer, context)
 }

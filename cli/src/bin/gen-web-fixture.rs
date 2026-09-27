@@ -29,8 +29,8 @@
 use std::env;
 use std::fs;
 
-use nonos_stark::air::{build_attestation_trailer_from_set, MeasuredSet, Poseidon, RATE};
-use nonos_stark::attest_params::{EXTRA_BLOWUP_BITS, GRIND_BITS, LOG_ROUNDS, N_QUERIES};
+use nonos_stark::air::{build_public_trailer, MeasuredSet, Poseidon, RATE};
+use nonos_stark::attest_params::LOG_ROUNDS;
 use nonos_stark::field::Fp;
 
 const LEAVES: usize = 256;
@@ -61,7 +61,9 @@ fn main() {
     }
 
     let hasher = Poseidon::new(LOG_ROUNDS, [Fp::ZERO; RATE]);
-    let set = MeasuredSet::commit(&hasher, &padded);
+    // Hybrid, so the page can derive member zero's leaf from the digest its
+    // context carries and the proof binds that member, not merely some member.
+    let set = MeasuredSet::commit_hybrid(&hasher, &padded);
 
     let mut root = [0u8; 32];
     for (i, lane) in set.root().iter().enumerate() {
@@ -76,16 +78,10 @@ fn main() {
     ctx.push(CALLER);
     fs::write(format!("{out}/context.bin"), &ctx).expect("write the context");
 
-    let trailer = build_attestation_trailer_from_set(
-        &hasher,
-        LOG_ROUNDS,
-        &set,
-        0,
-        &ctx,
-        N_QUERIES,
-        GRIND_BITS,
-        EXTRA_BLOWUP_BITS,
-    );
+    let Some(trailer) = build_public_trailer(&set, 0, &ctx) else {
+        eprintln!("member zero is outside the set");
+        std::process::exit(2);
+    };
     fs::write(format!("{out}/trailer.bin"), &trailer).expect("write the trailer");
 
     println!("enrolled {} artifact(s) into a {LEAVES}-slot set", images.len());

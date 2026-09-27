@@ -17,9 +17,10 @@
 //! The attestation gate, compiled for a browser tab.
 //!
 //! This is not a demo verifier or a reimplementation: it is the same
-//! `verify_attestation_trailer` the NONOS kernel runs at every process spawn
-//! and the bootloader runs before jumping to the kernel, compiled to
-//! WebAssembly. A visitor who verifies a release trailer here has run the
+//! public-leaf gate the NONOS kernel runs at every process spawn and the
+//! bootloader runs before jumping to the kernel, compiled to WebAssembly. The
+//! leaf is derived from the BLAKE3 digest every context begins with, so a
+//! proof verifies only for the member with that digest. A visitor who verifies a release trailer here has run the
 //! deployment's own gate against the deployment's own bytes, in their own
 //! machine, with no trust placed in the page that served it beyond the wasm
 //! being this crate; and the wasm is reproducible from this source.
@@ -36,9 +37,9 @@
 //! `lean/Zkolang/Trailer.lean`) and this wrapper adds only bounds-checked
 //! slices over memory the caller allocated through `wasm_alloc`.
 
-use nonos_stark::air::verify_attestation_trailer;
+use nonos_stark::air::verify_public_trailer_digest;
 use nonos_stark::air::{Poseidon, RATE};
-use nonos_stark::attest_params::{LOG_ROUNDS, N_QUERIES};
+use nonos_stark::attest_params::LOG_ROUNDS;
 use nonos_stark::field::Fp;
 
 use std::alloc::{alloc, dealloc, Layout};
@@ -97,20 +98,19 @@ pub unsafe extern "C" fn verify(
     let trailer = core::slice::from_raw_parts(trailer, trailer_len);
     let context = core::slice::from_raw_parts(ctx, ctx_len);
 
-    let mut root_fp = [Fp::ZERO; RATE];
-    for (i, lane) in root_fp.iter_mut().enumerate() {
-        let mut w = [0u8; 8];
-        w.copy_from_slice(&root[i * 8..i * 8 + 8]);
-        let v = u64::from_le_bytes(w);
-        // a root lane past the field modulus is not a root
-        if v >= 0xFFFF_FFFF_0000_0001 {
-            return 0;
-        }
-        *lane = Fp::from_u64(v);
+    // A root lane past the field modulus is not a root.
+    let lane =
+        |i: usize| u64::from_le_bytes(root[i * 8..i * 8 + 8].try_into().unwrap_or([0xFF; 8]));
+    if (0..4).any(|i| lane(i) >= 0xFFFF_FFFF_0000_0001) {
+        return 0;
     }
-
-    let hasher = Poseidon::new(LOG_ROUNDS, [Fp::ZERO; RATE]);
-    u32::from(verify_attestation_trailer(&hasher, LOG_ROUNDS, root_fp, N_QUERIES, trailer, context))
+    let (Some(digest), Some(&depth)) = (context.get(..32), trailer.get(8)) else {
+        return 0;
+    };
+    let (Ok(root), Ok(digest)) = (<[u8; 32]>::try_from(root), <[u8; 32]>::try_from(digest)) else {
+        return 0;
+    };
+    u32::from(verify_public_trailer_digest(&root, depth as usize, &digest, trailer, context))
 }
 
 /// Fold a complete leaf set to its Merkle root, in the tree the deployment

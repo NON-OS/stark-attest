@@ -207,7 +207,7 @@ async function runChain(imgBytes, efiBytes) {
     const kernel = imgBytes.slice(kOff, kOff + kSize);
     const trailer = imgBytes.slice(pOff, pOff + pSize);
     chainLine("ok", `image footer parsed: kernel body ${kSize.toLocaleString()} bytes, embedded trailer ${pSize.toLocaleString()} bytes, rollback index ${rollback}`);
-    if (new TextDecoder().decode(trailer.slice(0, 8)) !== "NZKSTRK1")
+    if (new TextDecoder().decode(trailer.slice(0, 8)) !== "NZKSTRK2")
       return chainLine("bad", "embedded proof is not a STARK trailer");
 
     const boot = findOnce(efiBytes, kernelRoot);
